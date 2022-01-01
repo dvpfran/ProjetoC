@@ -33,6 +33,7 @@ typedef struct {
 
 Escola RegistarEscola(char nome[], char abreviacao[], int campus, char localidade[]);
 void CarregarEscolas();
+char *converterEscolasParaChar(Escola escolas[]);
 
 Utilizador RegistarUtilizador();
 Utilizador ConsultarUtilizador();
@@ -65,6 +66,29 @@ Escola RegistarEscola(char nome[], char abreviacao[], int campus, char localidad
 
 void CarregarEscolas(Escola escolas[]) {
     escolas[0] = RegistarEscola("Escola Superior de Educação e Ciências Sociais", "ESECS", 1, "Leiria");
+}
+
+char *converterEscolasParaChar(Escola escolas[])
+{
+    char *charEscolas = malloc(1024);
+    for (int index = 0; index < NUM_ESCOLAS; index++)
+    {
+        char charEscola[200];
+        // Junta todas as variáveis da escolas[index] na variável charEscola.
+        sprintf(charEscola, "[%d;%s;%s;%d;%s]\n", escolas[index].id, escolas[index].nome, escolas[index].abreviacao, escolas[index].campus, escolas[index].localidade);
+
+        // Se o strcat for usado com o array vazio vai
+        // vai adicionar símbolos estranho no início do index 0.
+        if (index > 0) {
+            // Vai concatenar o charEscola com o charEscolas.
+            strcat(charEscolas, charEscola);
+        }
+        else {
+            // Copia o charEscola para o charEscolas.
+            strcpy(charEscolas, charEscola);
+        }
+    }
+    return charEscolas;
 }
 
 void guardarDadosFicheiro(char dados[], char caminhoFicheiro[])
