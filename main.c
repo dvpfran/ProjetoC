@@ -85,6 +85,7 @@ void CarregarEscolas(Escola escolas[])
 {
 }
 
+// Prepara os valores das escolas para depois serem guardados num ficheiro.
 char *converterEscolasParaChar(Escola escolas[], int escolasRegistadas)
 {
     char *charEscolas = malloc(1024);
@@ -92,7 +93,7 @@ char *converterEscolasParaChar(Escola escolas[], int escolasRegistadas)
     {
         char charEscola[200];
         // Junta todas as variáveis da escolas[index] na variável charEscola.
-        sprintf(charEscola, "[%d;%s;%s;%d;%s]\n", escolas[index].id, escolas[index].nome, escolas[index].abreviacao, escolas[index].campus, escolas[index].localidade);
+        sprintf(charEscola, "%d;%s;%s;%d;%s;\n", escolas[index].id, escolas[index].nome, escolas[index].abreviacao, escolas[index].campus, escolas[index].localidade);
 
         // Se o strcat for usado com o array vazio vai
         // vai adicionar símbolos estranho no início do index 0.
