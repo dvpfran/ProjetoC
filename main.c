@@ -17,6 +17,9 @@ typedef struct
     int campus;
 } Escola;
 
+// Atualizar este valor quando é adicionado ou removido algum campo da struct Escola.
+#define NUM_CAMPOS_STRUCT_ESCOLA 5
+
 typedef struct
 {
     int id;
@@ -40,6 +43,8 @@ typedef struct
 Escola registarEscola(int proximoId);
 void CarregarEscolas();
 char *converterEscolasParaChar(Escola escolas[], int escolasRegistadas);
+int converterCharParaEscolas(char charEscolas[], Escola escolas[]);
+void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas, Escola escolas[], char splitEscolas[]);
 
 Utilizador registarUtilizador();
 Utilizador ConsultarUtilizador();
@@ -58,7 +63,6 @@ void main()
 {
     int escolasRegistadas = 0;
     Escola escolas[NUM_ESCOLAS];
-    lerDadosFicheiro(PATH_ESCOLAS);
 }
 
 Escola registarEscola(int proximoId)
@@ -106,6 +110,49 @@ char *converterEscolasParaChar(Escola escolas[], int escolasRegistadas)
     return charEscolas;
 }
 
+// Vai retornar o número de escolas existentes.
+int converterCharParaEscolas(char charEscolas[], Escola escolas[]) {
+    int contadorEscolas = 0, contadorCamposEscola = 1;
+    // Vai dividir os valores a cada ; que encontrar.
+    char *splitEscolas = strtok(charEscolas, ";");
+
+    while (splitEscolas != NULL) { 
+        // Vai atualizar o array escolas conforme o contadorCamposEscola e o contadorEscolas.    
+        converterCharParaCampoEscola(contadorCamposEscola, contadorEscolas, escolas, splitEscolas);
+        contadorCamposEscola++;
+
+        // Assim que o contadorCamposEscola ficar maior signfica
+        // que o próximo registo já faz parte de outra escola.
+        if (contadorCamposEscola > NUM_CAMPOS_STRUCT_ESCOLA) {
+            contadorCamposEscola = 1;
+            contadorEscolas++;
+        }
+		splitEscolas = strtok(NULL, ";");
+	}
+
+    return contadorEscolas;
+}
+
+void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas, Escola escolas[], char splitEscolas[]) {
+     switch (contadorCamposEscola) {
+        case 1:
+            escolas[contadorEscolas].id = (atoi)(splitEscolas);
+            break;
+        case 2:
+            strcpy(escolas[contadorEscolas].nome, splitEscolas);
+            break;
+        case 3:
+            strcpy(escolas[contadorEscolas].abreviacao, splitEscolas);
+            break;
+        case 4:
+            escolas[contadorEscolas].campus = atoi(splitEscolas);
+            break;
+        case 5:
+            strcpy(escolas[contadorEscolas].localidade, splitEscolas);
+            break;
+    }
+}
+
 char *lerDadosFicheiro(char caminhoFicheiro[])
 {
     FILE *dadosFicheiro;
@@ -117,7 +164,7 @@ char *lerDadosFicheiro(char caminhoFicheiro[])
         exit(EXIT_FAILURE);
     }
 
-    char buffer[1024];
+    char *buffer = malloc(1024);
 
     fgets(buffer, 1024, dadosFicheiro);
     fclose(dadosFicheiro);
