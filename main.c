@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define NUM_ESCOLAS 5
 #define NUM_UTilizadores 200
@@ -31,11 +32,11 @@ typedef struct {
     char dataHora[50];
 } Transacao;
 
-Escola RegistarEscola(char nome[], char abreviacao[], int campus, char localidade[]);
+Escola registarEscola(int proximoId);
 void CarregarEscolas();
 char *converterEscolasParaChar(Escola escolas[]);
 
-Utilizador RegistarUtilizador();
+Utilizador registarUtilizador();
 Utilizador ConsultarUtilizador();
 
 Transacao RegistarTransacao();
@@ -49,23 +50,29 @@ void LerDadosFicheiro();
 void guardarDadosFicheiro(); // guardar em binário
 
 void main() {
+    int escolasRegistadas = 0;
     Escola escolas[NUM_ESCOLAS];
-    CarregarEscolas(escolas);
-
-    // CHAMAR FUNÇÃO
+;
+    
 }
 
-Escola RegistarEscola(char nome[], char abreviacao[], int campus, char localidade[]) {
-    Escola escola;//GUIA!!!
-    strcpy(escola.nome, nome);
-    strcpy(escola.abreviacao, abreviacao);
-    strcpy(escola.localidade, localidade);
-    escola.campus = campus;
+Escola registarEscola(int proximoId)
+{
+    Escola escola;
+    escola.id = proximoId;
+    printf("* Registo de nova escola\n");
+    printf("* Nome: ");
+    scanf("%s", &escola.nome);
+    printf("* Abreviacao: ");
+    scanf("%s", &escola.abreviacao);
+    printf("* Localidade: ");
+    scanf("%s", &escola.localidade);
+    printf("* Campus: ");
+    scanf("%d", &escola.campus);
     return escola;
 }
 
 void CarregarEscolas(Escola escolas[]) {
-    escolas[0] = RegistarEscola("Escola Superior de Educação e Ciências Sociais", "ESECS", 1, "Leiria");
 }
 
 char *converterEscolasParaChar(Escola escolas[])
