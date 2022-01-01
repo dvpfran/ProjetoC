@@ -6,7 +6,10 @@
 #define NUM_UTilizadores 200
 #define NUM_Transacoes 5000
 
-typedef struct {
+#define PATH_ESCOLAS "dados_escolas.txt"
+
+typedef struct
+{
     int id;
     char nome[100];
     char abreviacao[10];
@@ -14,7 +17,8 @@ typedef struct {
     int campus;
 } Escola;
 
-typedef struct {
+typedef struct
+{
     int id;
     int idEscola;
     char nome[100];
@@ -24,7 +28,8 @@ typedef struct {
     float saldo;
 } Utilizador;
 
-typedef struct {
+typedef struct
+{
     int id;
     int idUtilizador;
     int tipoTransacao; // Carregamento Pagamento
@@ -34,7 +39,7 @@ typedef struct {
 
 Escola registarEscola(int proximoId);
 void CarregarEscolas();
-char *converterEscolasParaChar(Escola escolas[]);
+char *converterEscolasParaChar(Escola escolas[], int escolasRegistadas);
 
 Utilizador registarUtilizador();
 Utilizador ConsultarUtilizador();
@@ -43,17 +48,16 @@ Transacao RegistarTransacao();
 Transacao ConsultarTransacao();
 
 void ConsultarTotalFaturaEscola(); // apresentado no menu principal
-void PercentagemTransacoes(); // pagamentos por escola
-void TotalTransacao(); // pagamentos entre duas datas por tipo de utilizador
+void PercentagemTransacoes();      // pagamentos por escola
+void TotalTransacao();             // pagamentos entre duas datas por tipo de utilizador
 
 void LerDadosFicheiro();
 void guardarDadosFicheiro(); // guardar em binário
 
-void main() {
+void main()
+{
     int escolasRegistadas = 0;
     Escola escolas[NUM_ESCOLAS];
-;
-    
 }
 
 Escola registarEscola(int proximoId)
@@ -72,13 +76,14 @@ Escola registarEscola(int proximoId)
     return escola;
 }
 
-void CarregarEscolas(Escola escolas[]) {
+void CarregarEscolas(Escola escolas[])
+{
 }
 
-char *converterEscolasParaChar(Escola escolas[])
+char *converterEscolasParaChar(Escola escolas[], int escolasRegistadas)
 {
     char *charEscolas = malloc(1024);
-    for (int index = 0; index < NUM_ESCOLAS; index++)
+    for (int index = 0; index < escolasRegistadas; index++)
     {
         char charEscola[200];
         // Junta todas as variáveis da escolas[index] na variável charEscola.
@@ -86,11 +91,13 @@ char *converterEscolasParaChar(Escola escolas[])
 
         // Se o strcat for usado com o array vazio vai
         // vai adicionar símbolos estranho no início do index 0.
-        if (index > 0) {
+        if (index > 0)
+        {
             // Vai concatenar o charEscola com o charEscolas.
             strcat(charEscolas, charEscola);
         }
-        else {
+        else
+        {
             // Copia o charEscola para o charEscolas.
             strcpy(charEscolas, charEscola);
         }
