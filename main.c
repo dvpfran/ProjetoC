@@ -45,7 +45,7 @@ void PercentagemTransacoes(); // pagamentos por escola
 void TotalTransacao(); // pagamentos entre duas datas por tipo de utilizador
 
 void LerDadosFicheiro();
-void GuardarDadosFicheiro(); // guardar em binário
+void guardarDadosFicheiro(); // guardar em binário
 
 void main() {
     Escola escolas[NUM_ESCOLAS];
@@ -66,19 +66,11 @@ Escola RegistarEscola(char nome[], char abreviacao[], int campus, char localidad
 void CarregarEscolas(Escola escolas[]) {
     escolas[0] = RegistarEscola("Escola Superior de Educação e Ciências Sociais", "ESECS", 1, "Leiria");
 }
-void ConsultarUtilizador(Utilizador utilizadores[])
+
+void guardarDadosFicheiro(char dados[], char caminhoFicheiro[])
 {
-    utilizadores[0] = RegistarUtilizador("")
-}
-{
-    printf("Insira o seu ID -  ");
-    scanf("%d", &id);
-    printf("Insira o seu ID escolar -  ");
-    scanf("%d", &idEscola);
-    printf("Insira o seu nome completo -  ");
-    scanf("%c", &nome);
-    printf("Insira o seu nif -  ");
-    scanf("%d", &nif);
-    printf("Insira o seu e-mail -  ");
-    scanf("%c", &email);
+    FILE *dadosFicheiro;
+    dadosFicheiro = fopen(caminhoFicheiro, "w");
+    fprintf(dadosFicheiro, "%s", dados);
+    fclose(dadosFicheiro);
 }
