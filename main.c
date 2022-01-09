@@ -47,6 +47,9 @@ typedef struct
 
 int menu_opcoes();
 
+void carregarTodosDados();
+void guardarTodosDados();
+
 Escola registarEscola(int proximoId);
 void carregarEscolas();
 char *converterEscolasParaChar(Escola escolas[], int escolasRegistadas);
@@ -72,6 +75,8 @@ void main()
     int escolasRegistadas = 0;
     Escola escolas[NUM_ESCOLAS];
 
+    carregarTodosDados(escolas);
+
     int opcaoMenu = 0;
     
     do {
@@ -88,6 +93,7 @@ void main()
                 break;
 
             case OPCAO_MENU_ESCOLAS_IMPORTAR:
+                carregarEscolas(escolas);
                 break;
             
             case OPCAO_MENU_SAIR:
@@ -95,6 +101,8 @@ void main()
                 break;
         }
     } while (opcaoMenu != OPCAO_MENU_SAIR);
+
+    guardarTodosDados(escolas, escolasRegistadas);
 }
 
 int menu_opcoes() {
@@ -125,8 +133,22 @@ Escola registarEscola(int proximoId)
     return escola;
 }
 
-void carregarEscolas(Escola escolas[])
-{
+// Função para carregar todos os dados quando o programa é aberto
+// Escolas - Utilizadores - Transações - Etc
+void carregarTodosDados(Escola escolas[]) {
+    carregarEscolas(escolas);
+}
+
+void carregarEscolas(Escola escolas[]) {
+    
+}
+
+// Função para guardar todos os dados
+// Escolas - Utilizadores - Transações
+void guardarTodosDados(Escola escolas[], int escolasRegistadas) {
+    // Escolas
+    char *charEscola = converterEscolasParaChar(escolas, escolasRegistadas);
+    guardarDadosFicheiro(charEscola, PATH_ESCOLAS);
 }
 
 void mostrarEscolas(Escola escolas[])
