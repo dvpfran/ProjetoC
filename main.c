@@ -50,6 +50,8 @@ int menu_opcoes();
 void carregarTodosDados();
 void guardarTodosDados();
 
+// Todas as funções relacionadas com escolas.
+void inicializarArrayEscolas();
 Escola registarEscola(int proximoId);
 void carregarEscolas();
 int converterCharParaEscolas(char charEscolas[], Escola escolas[]);
@@ -74,6 +76,7 @@ void main()
 {
     int escolasRegistadas = 0;
     Escola escolas[NUM_ESCOLAS];
+    inicializarArrayEscolas(escolas);
 
     carregarTodosDados(escolas);
 
@@ -102,6 +105,16 @@ void main()
     } while (opcaoMenu != OPCAO_MENU_SAIR);
 
     guardarTodosDados(escolas, escolasRegistadas);
+// Vai inicializar o array das escolas e garantir que todos os id's comecem a 0.
+// Se o id tiver a 0 significa que a posição do array ainda não foi preenchida.
+void inicializarArrayEscolas(Escola escolas[]) {
+    for (int index = 0; index < NUM_ESCOLAS; index++) {
+        escolas[index].id = 0;
+        strcpy(escolas[index].nome, "");
+        strcpy(escolas[index].abreviacao, "");
+        strcpy(escolas[index].localidade, "");
+        escolas[index].campus = 0;
+    }
 }
 
 int menu_opcoes() {
