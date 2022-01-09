@@ -81,7 +81,6 @@ void main()
     
     do {
         opcaoMenu = menu_opcoes();
-        
         switch (opcaoMenu) {
             case OPCAO_MENU_ESCOLAS_REGISTAR:
                 escolas[escolasRegistadas] = registarEscola(escolasRegistadas);
@@ -113,6 +112,9 @@ int menu_opcoes() {
     printf("* %d - Registar Escolas   *\n", OPCAO_MENU_ESCOLAS_REGISTAR);
     printf("* %d - Consultar Escolas  *\n", OPCAO_MENU_ESCOLAS_CONSULTAR);
     printf("* %d - Importar Escolas   *\n", OPCAO_MENU_ESCOLAS_IMPORTAR);
+    printf("* %d - Sair               *\n", OPCAO_MENU_SAIR);
+    printf("* Selecionar menu: ");
+    scanf("%d", &menuSelecionado);
     printf("********************************************************************************\n");
     return menuSelecionado;
 }
