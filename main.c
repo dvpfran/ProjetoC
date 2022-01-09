@@ -52,8 +52,8 @@ void guardarTodosDados();
 
 Escola registarEscola(int proximoId);
 void carregarEscolas();
-char *converterEscolasParaChar(Escola escolas[], int escolasRegistadas);
 int converterCharParaEscolas(char charEscolas[], Escola escolas[]);
+char *converterEscolasParaChar(Escola escolas[]);
 void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas, Escola escolas[], char splitEscolas[]);
 void mostrarEscolas(Escola escolas[]);
 
@@ -172,33 +172,35 @@ void mostrarEscolas(Escola escolas[])
 }
 
 // Prepara os valores das escolas para depois serem guardados num ficheiro.
-char *converterEscolasParaChar(Escola escolas[], int escolasRegistadas)
+char *converterEscolasParaChar(Escola escolas[])
 {
     char *charEscolas = malloc(1024);
-    for (int index = 0; index < escolasRegistadas; index++)
+    for (int index = 0; index < NUM_ESCOLAS; index++)
     {
-        char charEscola[200];
-        // Junta todas as variáveis da escolas[index] na variável charEscola.
-        sprintf(charEscola, "%d;%s;%s;%d;%s;", escolas[index].id, escolas[index].nome, escolas[index].abreviacao, escolas[index].campus, escolas[index].localidade);
+        if (escolas[index].id > 0) {
+            char charEscola[200];
+            // Junta todas as variáveis da escolas[index] na variável charEscola.
+            sprintf(charEscola, "%d;%s;%s;%d;%s;", escolas[index].id, escolas[index].nome, escolas[index].abreviacao, escolas[index].campus, escolas[index].localidade);
 
-        // Se o strcat for usado com o array vazio vai
-        // vai adicionar símbolos estranho no início do index 0.
-        if (index > 0)
-        {
-            // Vai concatenar o charEscola com o charEscolas.
-            strcat(charEscolas, charEscola);
-        }
-        else
-        {
-            // Copia o charEscola para o charEscolas.
-            strcpy(charEscolas, charEscola);
+            // Se o strcat for usado com o array vazio vai
+            // vai adicionar símbolos estranho no início do index 0.
+            if (index > 0)
+            {
+                // Vai concatenar o charEscola com o charEscolas.
+                strcat(charEscolas, charEscola);
+            }
+            else
+            {
+                // Copia o charEscola para o charEscolas.
+                strcpy(charEscolas, charEscola);
+            }
         }
     }
     return charEscolas;
 }
 
 // Vai retornar o número de escolas existentes.
-int converterCharParaEscolas(char charEscolas[], Escola escolas[]) {
+void converterCharParaEscolas(char charEscolas[], Escola escolas[]) {
     int contadorEscolas = 0, contadorCamposEscola = 1;
     // Vai dividir os valores a cada ; que encontrar.
     char *splitEscolas = strtok(charEscolas, ";");
@@ -216,8 +218,6 @@ int converterCharParaEscolas(char charEscolas[], Escola escolas[]) {
         }
 		splitEscolas = strtok(NULL, ";");
 	}
-
-    return contadorEscolas;
 }
 
 void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas, Escola escolas[], char splitEscolas[]) {
