@@ -6,6 +6,11 @@
 #define NUM_UTilizadores 200
 #define NUM_Transacoes 5000
 
+#define OPCAO_MENU_SAIR 0
+#define OPCAO_MENU_ESCOLAS_REGISTAR 1
+#define OPCAO_MENU_ESCOLAS_CONSULTAR 2
+#define OPCAO_MENU_ESCOLAS_IMPORTAR 3
+
 #define PATH_ESCOLAS "dados_escolas.txt"
 
 typedef struct
@@ -40,15 +45,26 @@ typedef struct
     char dataHora[50];
 } Transacao;
 
-Escola registarEscola(int proximoId);
-void CarregarEscolas();
-char *converterEscolasParaChar(Escola escolas[], int escolasRegistadas);
-int converterCharParaEscolas(char charEscolas[], Escola escolas[]);
-void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas, Escola escolas[], char splitEscolas[]);
+int menu_opcoes();
 
+void carregarTodosDados();
+void guardarTodosDados();
+
+// Todas as funções relacionadas com escolas.
+void inicializarArrayEscolas();
+Escola registarEscola(int proximoId);
+void carregarEscolas();
+int obterNumeroEscolasRegistadas(Escola escolas[]);
+char *converterEscolasParaChar(Escola escolas[]);
+void converterCharParaEscolas(char charEscolas[], Escola escolas[]);
+void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas, Escola escolas[], char splitEscolas[]);
+void mostrarEscolas(Escola escolas[]);
+
+// Todas as funções relacionadas com utilizadores.
 Utilizador registarUtilizador();
 Utilizador ConsultarUtilizador();
 
+// Todas as funções relacionadas com transações.
 Transacao RegistarTransacao();
 Transacao ConsultarTransacao();
 
@@ -61,14 +77,71 @@ void guardarDadosFicheiro(); // guardar em binário
 
 void main()
 {
-    int escolasRegistadas = 0;
     Escola escolas[NUM_ESCOLAS];
+    inicializarArrayEscolas(escolas);
+
+    carregarTodosDados(escolas);
+
+    int escolasRegistadas = obterNumeroEscolasRegistadas(escolas);
+
+    int opcaoMenu = 0;
+    
+    do {
+        opcaoMenu = menu_opcoes();
+
+        switch (opcaoMenu) {
+            case OPCAO_MENU_ESCOLAS_REGISTAR:
+                escolas[escolasRegistadas] = registarEscola(escolasRegistadas);
+                break;
+
+            case OPCAO_MENU_ESCOLAS_CONSULTAR:
+                mostrarEscolas(escolas);
+                break;
+
+            case OPCAO_MENU_ESCOLAS_IMPORTAR:
+                carregarEscolas(escolas);
+                break;
+            
+            case OPCAO_MENU_SAIR:
+            default:
+                break;
+        }
+    } while (opcaoMenu != OPCAO_MENU_SAIR);
+
+    guardarTodosDados(escolas);
+}
+
+// Vai inicializar o array das escolas e garantir que todos os id's comecem a 0.
+// Se o id tiver a 0 significa que a posição do array ainda não foi preenchida.
+void inicializarArrayEscolas(Escola escolas[]) {
+    for (int index = 0; index < NUM_ESCOLAS; index++) {
+        escolas[index].id = 0;
+        strcpy(escolas[index].nome, "");
+        strcpy(escolas[index].abreviacao, "");
+        strcpy(escolas[index].localidade, "");
+        escolas[index].campus = 0;
+    }
+}
+
+int menu_opcoes() {
+    int menuSelecionado = 0;
+
+    printf("******************************** MENU PRINCIPAL ********************************\n");
+    printf("******** Escolas: ********\n");
+    printf("* %d - Registar Escolas   *\n", OPCAO_MENU_ESCOLAS_REGISTAR);
+    printf("* %d - Consultar Escolas  *\n", OPCAO_MENU_ESCOLAS_CONSULTAR);
+    printf("* %d - Importar Escolas   *\n", OPCAO_MENU_ESCOLAS_IMPORTAR);
+    printf("* %d - Sair               *\n", OPCAO_MENU_SAIR);
+    printf("* Selecionar menu: ");
+    scanf("%d", &menuSelecionado);
+    printf("********************************************************************************\n");
+    return menuSelecionado;
 }
 
 Escola registarEscola(int proximoId)
 {
     Escola escola;
-    escola.id = proximoId;
+    escola.id = proximoId + 1;
     printf("* Registo de nova escola\n");
     printf("* Nome: ");
     scanf("%s", &escola.nome);
@@ -78,41 +151,92 @@ Escola registarEscola(int proximoId)
     scanf("%s", &escola.localidade);
     printf("* Campus: ");
     scanf("%d", &escola.campus);
+    
+    system("cls");
+
     return escola;
 }
 
-void CarregarEscolas(Escola escolas[])
+// Função para carregar todos os dados quando o programa é aberto
+// Escolas - Utilizadores - Transações - Etc
+void carregarTodosDados(Escola escolas[]) {
+    carregarEscolas(escolas);
+}
+
+void carregarEscolas(Escola escolas[]) {
+    char *dadosEscolas = lerDadosFicheiro(PATH_ESCOLAS);
+    converterCharParaEscolas(dadosEscolas, escolas);
+}
+
+// Função para guardar todos os dados
+// Escolas - Utilizadores - Transações
+void guardarTodosDados(Escola escolas[]) {
+    // Escolas
+    char *charEscola = converterEscolasParaChar(escolas);
+    guardarDadosFicheiro(charEscola, PATH_ESCOLAS);
+}
+
+void mostrarEscolas(Escola escolas[])
 {
+    system("cls");
+    for (int index = 0; index < NUM_ESCOLAS; index++)
+    {
+        if (escolas[index].id > 0) {
+            printf("********************************************************************************\n");
+            printf("* Id: %d\n", escolas[index].id);
+            printf("* Abreviacao: %s\n", escolas[index].abreviacao);
+            printf("* Nome: %s\n", escolas[index].nome);
+            printf("* Campus: %d\n", escolas[index].campus);
+            printf("* Localidade: %s\n", escolas[index].localidade);
+        }
+
+        if (index + 1 == NUM_ESCOLAS)
+        {
+            printf("********************************************************************************\n");
+        }
+    }
+}
+
+int obterNumeroEscolasRegistadas(Escola escolas[]) {
+    int contador = 0;
+    for (int index = 0; index < NUM_ESCOLAS; index++) {
+        if (escolas[index].id > 0) {
+            contador++;
+        }
+    }
+    return contador;
 }
 
 // Prepara os valores das escolas para depois serem guardados num ficheiro.
-char *converterEscolasParaChar(Escola escolas[], int escolasRegistadas)
+char *converterEscolasParaChar(Escola escolas[])
 {
     char *charEscolas = malloc(1024);
-    for (int index = 0; index < escolasRegistadas; index++)
+    for (int index = 0; index < NUM_ESCOLAS; index++)
     {
-        char charEscola[200];
-        // Junta todas as variáveis da escolas[index] na variável charEscola.
-        sprintf(charEscola, "%d;%s;%s;%d;%s;", escolas[index].id, escolas[index].nome, escolas[index].abreviacao, escolas[index].campus, escolas[index].localidade);
+        if (escolas[index].id > 0) {
+            char charEscola[200];
+            // Junta todas as variáveis da escolas[index] na variável charEscola.
+            sprintf(charEscola, "%d;%s;%s;%d;%s;", escolas[index].id, escolas[index].nome, escolas[index].abreviacao, escolas[index].campus, escolas[index].localidade);
 
-        // Se o strcat for usado com o array vazio vai
-        // vai adicionar símbolos estranho no início do index 0.
-        if (index > 0)
-        {
-            // Vai concatenar o charEscola com o charEscolas.
-            strcat(charEscolas, charEscola);
-        }
-        else
-        {
-            // Copia o charEscola para o charEscolas.
-            strcpy(charEscolas, charEscola);
+            // Se o strcat for usado com o array vazio vai
+            // vai adicionar símbolos estranho no início do index 0.
+            if (index > 0)
+            {
+                // Vai concatenar o charEscola com o charEscolas.
+                strcat(charEscolas, charEscola);
+            }
+            else
+            {
+                // Copia o charEscola para o charEscolas.
+                strcpy(charEscolas, charEscola);
+            }
         }
     }
     return charEscolas;
 }
 
 // Vai retornar o número de escolas existentes.
-int converterCharParaEscolas(char charEscolas[], Escola escolas[]) {
+void converterCharParaEscolas(char charEscolas[], Escola escolas[]) {
     int contadorEscolas = 0, contadorCamposEscola = 1;
     // Vai dividir os valores a cada ; que encontrar.
     char *splitEscolas = strtok(charEscolas, ";");
@@ -130,8 +254,6 @@ int converterCharParaEscolas(char charEscolas[], Escola escolas[]) {
         }
 		splitEscolas = strtok(NULL, ";");
 	}
-
-    return contadorEscolas;
 }
 
 void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas, Escola escolas[], char splitEscolas[]) {
