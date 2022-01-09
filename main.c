@@ -6,6 +6,11 @@
 #define NUM_UTilizadores 200
 #define NUM_Transacoes 5000
 
+#define OPCAO_MENU_SAIR 0
+#define OPCAO_MENU_ESCOLAS_REGISTAR 1
+#define OPCAO_MENU_ESCOLAS_CONSULTAR 2
+#define OPCAO_MENU_ESCOLAS_IMPORTAR 3
+
 #define PATH_ESCOLAS "dados_escolas.txt"
 
 typedef struct
@@ -40,11 +45,14 @@ typedef struct
     char dataHora[50];
 } Transacao;
 
+int menu_opcoes();
+
 Escola registarEscola(int proximoId);
-void CarregarEscolas();
+void carregarEscolas();
 char *converterEscolasParaChar(Escola escolas[], int escolasRegistadas);
 int converterCharParaEscolas(char charEscolas[], Escola escolas[]);
 void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas, Escola escolas[], char splitEscolas[]);
+void mostrarEscolas(Escola escolas[]);
 
 Utilizador registarUtilizador();
 Utilizador ConsultarUtilizador();
@@ -63,6 +71,42 @@ void main()
 {
     int escolasRegistadas = 0;
     Escola escolas[NUM_ESCOLAS];
+
+    int opcaoMenu = 0;
+    
+    do {
+        opcaoMenu = menu_opcoes();
+        
+        switch (opcaoMenu) {
+            case OPCAO_MENU_ESCOLAS_REGISTAR:
+                escolas[escolasRegistadas] = registarEscola(escolasRegistadas);
+                escolasRegistadas++;
+                break;
+
+            case OPCAO_MENU_ESCOLAS_CONSULTAR:
+                mostrarEscolas(escolas);
+                break;
+
+            case OPCAO_MENU_ESCOLAS_IMPORTAR:
+                break;
+            
+            case OPCAO_MENU_SAIR:
+            default:
+                break;
+        }
+    } while (opcaoMenu != OPCAO_MENU_SAIR);
+}
+
+int menu_opcoes() {
+    int menuSelecionado = 0;
+
+    printf("******************************** MENU PRINCIPAL ********************************\n");
+    printf("******** Escolas: ********\n");
+    printf("* %d - Registar Escolas   *\n", OPCAO_MENU_ESCOLAS_REGISTAR);
+    printf("* %d - Consultar Escolas  *\n", OPCAO_MENU_ESCOLAS_CONSULTAR);
+    printf("* %d - Importar Escolas   *\n", OPCAO_MENU_ESCOLAS_IMPORTAR);
+    printf("********************************************************************************\n");
+    return menuSelecionado;
 }
 
 Escola registarEscola(int proximoId)
@@ -81,8 +125,26 @@ Escola registarEscola(int proximoId)
     return escola;
 }
 
-void CarregarEscolas(Escola escolas[])
+void carregarEscolas(Escola escolas[])
 {
+}
+
+void mostrarEscolas(Escola escolas[])
+{
+    for (int index = 0; index < NUM_ESCOLAS; index++)
+    {
+        printf("********************************************************\n");
+        printf("* Id: %d\n", escolas[index].id);
+        printf("* Abreviacao: %s\n", escolas[index].abreviacao);
+        printf("* Nome: %s\n", escolas[index].nome);
+        printf("* Campus: %d\n", escolas[index].campus);
+        printf("* Localidade: %s\n", escolas[index].localidade);
+
+        if (index + 1 == NUM_ESCOLAS)
+        {
+            printf("********************************************************\n");
+        }
+    }
 }
 
 // Prepara os valores das escolas para depois serem guardados num ficheiro.
