@@ -54,14 +54,17 @@ void guardarTodosDados();
 void inicializarArrayEscolas();
 Escola registarEscola(int proximoId);
 void carregarEscolas();
-int converterCharParaEscolas(char charEscolas[], Escola escolas[]);
+int obterNumeroEscolasRegistadas(Escola escolas[]);
 char *converterEscolasParaChar(Escola escolas[]);
+void converterCharParaEscolas(char charEscolas[], Escola escolas[]);
 void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas, Escola escolas[], char splitEscolas[]);
 void mostrarEscolas(Escola escolas[]);
 
+// Todas as funções relacionadas com utilizadores.
 Utilizador registarUtilizador();
 Utilizador ConsultarUtilizador();
 
+// Todas as funções relacionadas com transações.
 Transacao RegistarTransacao();
 Transacao ConsultarTransacao();
 
@@ -74,20 +77,21 @@ void guardarDadosFicheiro(); // guardar em binário
 
 void main()
 {
-    int escolasRegistadas = 0;
     Escola escolas[NUM_ESCOLAS];
     inicializarArrayEscolas(escolas);
 
     carregarTodosDados(escolas);
 
+    int escolasRegistadas = obterNumeroEscolasRegistadas(escolas);
+
     int opcaoMenu = 0;
     
     do {
         opcaoMenu = menu_opcoes();
+
         switch (opcaoMenu) {
             case OPCAO_MENU_ESCOLAS_REGISTAR:
                 escolas[escolasRegistadas] = registarEscola(escolasRegistadas);
-                escolasRegistadas++;
                 break;
 
             case OPCAO_MENU_ESCOLAS_CONSULTAR:
@@ -104,7 +108,9 @@ void main()
         }
     } while (opcaoMenu != OPCAO_MENU_SAIR);
 
-    guardarTodosDados(escolas, escolasRegistadas);
+    guardarTodosDados(escolas);
+}
+
 // Vai inicializar o array das escolas e garantir que todos os id's comecem a 0.
 // Se o id tiver a 0 significa que a posição do array ainda não foi preenchida.
 void inicializarArrayEscolas(Escola escolas[]) {
@@ -135,7 +141,7 @@ int menu_opcoes() {
 Escola registarEscola(int proximoId)
 {
     Escola escola;
-    escola.id = proximoId;
+    escola.id = proximoId + 1;
     printf("* Registo de nova escola\n");
     printf("* Nome: ");
     scanf("%s", &escola.nome);
@@ -145,6 +151,9 @@ Escola registarEscola(int proximoId)
     scanf("%s", &escola.localidade);
     printf("* Campus: ");
     scanf("%d", &escola.campus);
+    
+    system("cls");
+
     return escola;
 }
 
@@ -155,33 +164,47 @@ void carregarTodosDados(Escola escolas[]) {
 }
 
 void carregarEscolas(Escola escolas[]) {
-    
+    char *dadosEscolas = lerDadosFicheiro(PATH_ESCOLAS);
+    converterCharParaEscolas(dadosEscolas, escolas);
 }
 
 // Função para guardar todos os dados
 // Escolas - Utilizadores - Transações
-void guardarTodosDados(Escola escolas[], int escolasRegistadas) {
+void guardarTodosDados(Escola escolas[]) {
     // Escolas
-    char *charEscola = converterEscolasParaChar(escolas, escolasRegistadas);
+    char *charEscola = converterEscolasParaChar(escolas);
     guardarDadosFicheiro(charEscola, PATH_ESCOLAS);
 }
 
 void mostrarEscolas(Escola escolas[])
 {
+    system("cls");
     for (int index = 0; index < NUM_ESCOLAS; index++)
     {
-        printf("********************************************************\n");
-        printf("* Id: %d\n", escolas[index].id);
-        printf("* Abreviacao: %s\n", escolas[index].abreviacao);
-        printf("* Nome: %s\n", escolas[index].nome);
-        printf("* Campus: %d\n", escolas[index].campus);
-        printf("* Localidade: %s\n", escolas[index].localidade);
+        if (escolas[index].id > 0) {
+            printf("********************************************************************************\n");
+            printf("* Id: %d\n", escolas[index].id);
+            printf("* Abreviacao: %s\n", escolas[index].abreviacao);
+            printf("* Nome: %s\n", escolas[index].nome);
+            printf("* Campus: %d\n", escolas[index].campus);
+            printf("* Localidade: %s\n", escolas[index].localidade);
+        }
 
         if (index + 1 == NUM_ESCOLAS)
         {
-            printf("********************************************************\n");
+            printf("********************************************************************************\n");
         }
     }
+}
+
+int obterNumeroEscolasRegistadas(Escola escolas[]) {
+    int contador = 0;
+    for (int index = 0; index < NUM_ESCOLAS; index++) {
+        if (escolas[index].id > 0) {
+            contador++;
+        }
+    }
+    return contador;
 }
 
 // Prepara os valores das escolas para depois serem guardados num ficheiro.
