@@ -6,10 +6,18 @@
 #define NUM_UTilizadores 200
 #define NUM_Transacoes 5000
 
+#define TIPO_UTILIZADOR_ESTUDANTE 1
+#define TIPO_UTILIZADOR_DOCENTE 2
+#define TIPO_UTILIZADOR_FUNCIONARIO 3
+
 #define OPCAO_MENU_SAIR 0
 #define OPCAO_MENU_ESCOLAS_REGISTAR 1
 #define OPCAO_MENU_ESCOLAS_CONSULTAR 2
 #define OPCAO_MENU_ESCOLAS_IMPORTAR 3
+
+#define OPCAO_MENU_UTILIZADORES_REGISTAR 4
+#define OPCAO_MENU_UTILIZADORES_CONSULTAR 5
+#define OPCAO_MENU_UTILIZADORES_IMPORTAR 6
 
 #define OPCAO_MENU_ESTATISTICAS_TOTAL_FATURADO_ESCOLA 11
 #define OPCAO_MENU_ESTATISTICAS_PERCENTAGEM_PAGAMENTOS 12
@@ -50,6 +58,8 @@ typedef struct
 } Transacao;
 
 int menu_opcoes();
+void menu_escolas();
+void menu_utilizadores();
 
 void carregarTodosDados();
 void guardarTodosDados();
@@ -131,15 +141,21 @@ int menu_opcoes() {
     int menuSelecionado = 0;
 
     printf("******************************** MENU PRINCIPAL ********************************\n");
+    menu_escolas();
+    menu_utilizadores();
+    printf("********************************************************************************\n");
+    
+    scanf("%d", &menuSelecionado);
+    return menuSelecionado;
+}
+
+void menu_escolas() {
     printf("******** Escolas: ********\n");
     printf("* %d - Registar Escolas   *\n", OPCAO_MENU_ESCOLAS_REGISTAR);
     printf("* %d - Consultar Escolas  *\n", OPCAO_MENU_ESCOLAS_CONSULTAR);
     printf("* %d - Importar Escolas   *\n", OPCAO_MENU_ESCOLAS_IMPORTAR);
     printf("* %d - Sair               *\n", OPCAO_MENU_SAIR);
     printf("* Selecionar menu: ");
-    scanf("%d", &menuSelecionado);
-    printf("********************************************************************************\n");
-    return menuSelecionado;
 }
 
 Escola registarEscola(int proximoId)
