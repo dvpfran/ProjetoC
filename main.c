@@ -143,9 +143,10 @@ int menu_opcoes() {
     printf("******************************** MENU PRINCIPAL ********************************\n");
     menu_escolas();
     menu_utilizadores();
-    printf("********************************************************************************\n");
-    
+    printf("* %d - Sair               *\n", OPCAO_MENU_SAIR);
+    printf("* Selecionar menu: ");
     scanf("%d", &menuSelecionado);
+    printf("\n********************************************************************************\n");
     return menuSelecionado;
 }
 
@@ -154,8 +155,13 @@ void menu_escolas() {
     printf("* %d - Registar Escolas   *\n", OPCAO_MENU_ESCOLAS_REGISTAR);
     printf("* %d - Consultar Escolas  *\n", OPCAO_MENU_ESCOLAS_CONSULTAR);
     printf("* %d - Importar Escolas   *\n", OPCAO_MENU_ESCOLAS_IMPORTAR);
-    printf("* %d - Sair               *\n", OPCAO_MENU_SAIR);
-    printf("* Selecionar menu: ");
+}
+
+void menu_utilizadores() {
+    printf("******** Utilizadores: ********\n");
+    printf("* %d - Registar Utilizador   *\n", OPCAO_MENU_UTILIZADORES_REGISTAR);
+    printf("* %d - Consultar Utilizador   *\n", OPCAO_MENU_UTILIZADORES_CONSULTAR);
+    printf("* %d - Importar Utilizador   *\n", OPCAO_MENU_UTILIZADORES_IMPORTAR);
 }
 
 Escola registarEscola(int proximoId)
@@ -177,23 +183,9 @@ Escola registarEscola(int proximoId)
     return escola;
 }
 
-// Função para carregar todos os dados quando o programa é aberto
-// Escolas - Utilizadores - Transações - Etc
-void carregarTodosDados(Escola escolas[]) {
-    carregarEscolas(escolas);
-}
-
 void carregarEscolas(Escola escolas[]) {
     char *dadosEscolas = lerDadosFicheiro(PATH_ESCOLAS);
     converterCharParaEscolas(dadosEscolas, escolas);
-}
-
-// Função para guardar todos os dados
-// Escolas - Utilizadores - Transações
-void guardarTodosDados(Escola escolas[]) {
-    // Escolas
-    char *charEscola = converterEscolasParaChar(escolas);
-    guardarDadosFicheiro(charEscola, PATH_ESCOLAS);
 }
 
 void mostrarEscolas(Escola escolas[])
@@ -294,6 +286,20 @@ void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas,
             strcpy(escolas[contadorEscolas].localidade, splitEscolas);
             break;
     }
+}
+
+// Função para carregar todos os dados quando o programa é aberto
+// Escolas - Utilizadores - Transações - Etc
+void carregarTodosDados(Escola escolas[]) {
+    carregarEscolas(escolas);
+}
+
+// Função para guardar todos os dados
+// Escolas - Utilizadores - Transações
+void guardarTodosDados(Escola escolas[]) {
+    // Escolas
+    char *charEscola = converterEscolasParaChar(escolas);
+    guardarDadosFicheiro(charEscola, PATH_ESCOLAS);
 }
 
 char *lerDadosFicheiro(char caminhoFicheiro[])
