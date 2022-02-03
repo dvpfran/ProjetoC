@@ -93,9 +93,6 @@ void ConsultarTotalFaturaEscola(); // apresentado no menu principal
 void PercentagemTransacoes();      // pagamentos por escola
 void TotalTransacao();             // pagamentos entre duas datas por tipo de utilizador
 
-char *lerDadosFicheiro(char caminhoFicheiro[]);
-void guardarDadosFicheiro(); // guardar em binário
-
 void main()
 {
     Escola escolas[NUM_ESCOLAS];
@@ -215,8 +212,8 @@ Escola registarEscola(int proximoId)
 }
 
 void carregarEscolas(Escola escolas[]) {
-    char *dadosEscolas = lerDadosFicheiro(PATH_ESCOLAS);
-    converterCharParaEscolas(dadosEscolas, escolas);
+    // char *dadosEscolas = lerDadosFicheiro(PATH_ESCOLAS);
+    // converterCharParaEscolas(dadosEscolas, escolas);
 }
 
 void mostrarEscolas(Escola escolas[])
@@ -414,32 +411,4 @@ void carregarTodosDados(Escola escolas[]) {
 // Escolas - Utilizadores - Transações
 void guardarTodosDados(Escola escolas[]) {
     // Escolas
-    char *charEscola = converterEscolasParaChar(escolas);
-    guardarDadosFicheiro(charEscola, PATH_ESCOLAS);
-}
-
-char *lerDadosFicheiro(char caminhoFicheiro[])
-{
-    FILE *dadosFicheiro;
-    dadosFicheiro = fopen(caminhoFicheiro, "r");
-
-    if (dadosFicheiro == NULL)
-    {
-        printf("O ficheiro nao existe.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    char *buffer = malloc(1024);
-
-    fgets(buffer, 1024, dadosFicheiro);
-    fclose(dadosFicheiro);
-    return buffer;
-}
-
-void guardarDadosFicheiro(char dados[], char caminhoFicheiro[])
-{
-    FILE *dadosFicheiro;
-    dadosFicheiro = fopen(caminhoFicheiro, "w");
-    fprintf(dadosFicheiro, "%s", dados);
-    fclose(dadosFicheiro);
 }
