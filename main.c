@@ -63,6 +63,7 @@ typedef struct
 int menu_opcoes();
 void menu_escolas();
 void menu_utilizadores();
+void menu_transacoes();
 
 void carregarTodosDados();
 void guardarTodosDados();
@@ -87,8 +88,10 @@ void mostrarTiposUtilizador();
 
 // Todas as funções relacionadas com transações.
 void inicializarArrayTransacoes();
-Transacao RegistarTransacao();
-Transacao ConsultarTransacao();
+Transacao registarTransacao(Transacao transacoes[]);
+void consultarTransacao(Transacao transacoes[]);
+void consultarTransacoes(Transacao transacoes[]);
+int obterNumeroTransacoesRegistadas(Transacao transacoes[]);
 
 void ConsultarTotalFaturaEscola(); // apresentado no menu principal
 void PercentagemTransacoes();      // pagamentos por escola
@@ -108,6 +111,7 @@ void main()
 
     int numEscolasRegistadas = obterNumeroEscolasRegistadas(escolas);
     int numUtilizadoresRegistados = obterNumeroUtilizadoresRegistados(utilizadores);
+    int numTransacoesRegistadas = obterNumeroUtilizadoresRegistados(utilizadores);
 
     int opcaoMenu = 0;
     
@@ -118,15 +122,27 @@ void main()
             case OPCAO_MENU_ESCOLAS_REGISTAR:
                 escolas[numEscolasRegistadas] = registarEscola(numEscolasRegistadas);
                 break;
+
             case OPCAO_MENU_ESCOLAS_CONSULTAR:
                 mostrarEscolas(escolas);
                 break;
+
             case OPCAO_MENU_UTILIZADORES_REGISTAR:
                 utilizadores[numUtilizadoresRegistados] = registarUtilizador(numUtilizadoresRegistados, escolas);
                 break;
+
             case OPCAO_MENU_UTILIZADORES_CONSULTAR:
                 mostrarUtilizadores(utilizadores);
                 break;
+
+            case OPCAO_MENU_TRANSACOES_REGISTAR:
+                registarTransacao(transacoes);
+                break;
+
+            case OPCAO_MENU_TRANSACOES_CONSULTAR:
+                consultarTransacoes(transacoes);
+                break;
+
             case OPCAO_MENU_SAIR:
             default:
                 break;
@@ -181,6 +197,7 @@ int menu_opcoes() {
     printf("******************************** MENU PRINCIPAL ********************************\n");
     menu_escolas();
     menu_utilizadores();
+    menu_transacoes();
     printf("*******\n");
     printf("* [%d] * Sair               *\n", OPCAO_MENU_SAIR);
     printf("* Selecionar menu: ");
@@ -350,11 +367,34 @@ void carregarUtilizadores(Utilizador utilizadores[]) {
     lerFicheiro(utilizadores, sizeof(Utilizador), NUM_MAX_UTILIZADORES, PATH_UTILIZADORES);
 }
 
+Transacao registarTransacao(Transacao transacoes[]) {
+
+}
+
+void consultarTransacoes(Transacao transacoes[]) {
+
+}
+
+int obterNumeroTransacoesRegistadas(Transacao transacoes[]) {
+    int contador = 0;
+    for (int index = 0; index < NUM_MAX_TRANSACOES; index++) {
+        if (transacoes[index].id > 0) {
+            contador++;
+        }
+    }
+    return contador;
+}
+
+void carregarTransacoes(Transacao transacoes[]) {
+    lerFicheiro(transacoes, sizeof(Transacao), NUM_MAX_TRANSACOES, PATH_TRANSACOES);
+}
+
 // Função para carregar todos os dados quando o programa é aberto
 // Escolas - Utilizadores - Transações - Etc
-void carregarTodosDados(Escola escolas[], Utilizador utilizadores[]) {
+void carregarTodosDados(Escola escolas[], Utilizador utilizadores[], Transacao transacoes[]) {
     carregarEscolas(escolas);
     carregarUtilizadores(utilizadores);
+    carregarTransacoes(transacoes);
 }
 
 // Função para guardar todos os dados
