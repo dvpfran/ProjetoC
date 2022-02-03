@@ -93,15 +93,18 @@ char *buscarTipoUtilizador(int tipoUtilizador);
 void mostrarTiposUtilizador();
 int selecionarIdUtilizador(Utilizador utilizadores[]);
 void atualizarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador, int tipoTransacao, float valor);
+float buscarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador);
 
 // Todas as funções relacionadas com transações.
 void inicializarArrayTransacoes();
 Transacao registarTransacao(int numTransacoes, int idUtilizador, int tipoTransacao, float valor);
+void realizarTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas);
 void consultarTransacao(Transacao transacoes[]);
 void consultarTransacoes(Transacao transacoes[]);
 int obterNumeroTransacoesRegistadas(Transacao transacoes[]);
 int selecionarTipoTransacao();
 float pedirValorTransacao(int tipoTransacao);
+
 
 void ConsultarTotalFaturaEscola(); // apresentado no menu principal
 void PercentagemTransacoes();      // pagamentos por escola
@@ -147,11 +150,7 @@ void main()
 
             case OPCAO_MENU_TRANSACOES_REGISTAR:
                 printf("* A abrir menu: registar transacoes\n");
-                int idUtilizador = selecionarIdUtilizador(utilizadores);
-                int tipoTransacao = selecionarTipoTransacao();
-                float valorTransacao = pedirValorTransacao(tipoTransacao);
-                atualizarSaldoUtilizador(utilizadores, idUtilizador, tipoTransacao, valorTransacao);
-                transacoes[numTransacoesRegistadas] = registarTransacao(numTransacoesRegistadas, idUtilizador, tipoTransacao, valorTransacao);
+                realizarTransacao(utilizadores, transacoes, numTransacoesRegistadas);
                 break;
 
             case OPCAO_MENU_TRANSACOES_CONSULTAR:
@@ -401,6 +400,38 @@ int selecionarIdUtilizador(Utilizador utilizadores[]) {
     return utilizador;
 }
 
+float buscarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador) {
+    for (int index = 0; index < NUM_MAX_UTILIZADORES; index++) {
+        if (utilizadores[index].id == idUtilizador ) {
+            return utilizadores[index].saldo;
+        }
+    }
+}
+
+void realizarTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas) {
+    int idUtilizador = selecionarIdUtilizador(utilizadores);
+    int tipoTransacao = selecionarTipoTransacao();
+
+    float valorTransacao = pedirValorTransacao(tipoTransacao);
+
+    int dinheiroSuficiente = 1;
+    float saldoUtilizador = 0;
+
+    if (tipoTransacao == TIPO_TRANSACAO_PAGAMENTO) {
+        saldoUtilizador = buscarSaldoUtilizador(utilizadores, idUtilizador);
+        dinheiroSuficiente = saldoUtilizador > valorTransacao;
+    }
+
+    if (dinheiroSuficiente == 1) {
+        atualizarSaldoUtilizador(utilizadores, idUtilizador, tipoTransacao, valorTransacao);
+        transacoes[numTransacoesRegistadas] = registarTransacao(numTransacoesRegistadas, idUtilizador, tipoTransacao, valorTransacao);
+    }
+    else {
+        printf("* Utilizador com saldo insuficiente para realizar o pagamento.\n");
+        printf("* Saldo utilizador: %.2f\n", saldoUtilizador);
+    }
+}
+
 Transacao registarTransacao(int numTransacoes, int idUtilizador, int tipoTransacao, float valor) {
     Transacao transacao;
     transacao.id = numTransacoes + 1;
@@ -414,12 +445,17 @@ Transacao registarTransacao(int numTransacoes, int idUtilizador, int tipoTransac
 void atualizarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador, int tipoTransacao, float valor) {
     for(int index = 0; index < NUM_MAX_UTILIZADORES; index++) {
         if (utilizadores[index].id == idUtilizador) {
+            float saldoAnteriror = utilizadores[index].saldo;
+            
             if (tipoTransacao == TIPO_TRANSACAO_PAGAMENTO) {
                 utilizadores[index].saldo -= valor;
             }
             if (tipoTransacao == TIPO_TRANSACAO_CARREGAMENTO) {
                 utilizadores[index].saldo += valor;
+                printf("* Carregamento realizado com sucesso.\n");
             }
+            
+            printf("* Saldo anterior: %.2f - Saldo atual: %.2f\n", saldoAnteriror, utilizadores[index].saldo);
             index = NUM_MAX_UTILIZADORES;
         }
     }
@@ -444,11 +480,11 @@ float pedirValorTransacao(int tipoTransacao) {
     float valor = 0;
     
     if (tipoTransacao == TIPO_TRANSACAO_PAGAMENTO) {
-        printf("Valor do pagamento: ");
+        printf("* Valor do pagamento: ");
     }
 
     if (tipoTransacao == TIPO_TRANSACAO_CARREGAMENTO) {
-        printf("Valor do carregamento: ");
+        printf("* Valor do carregamento: ");
     }
 
     scanf("%f", &valor);
