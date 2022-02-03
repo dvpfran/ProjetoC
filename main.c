@@ -70,9 +70,6 @@ void inicializarArrayEscolas();
 Escola registarEscola(int proximoId);
 void carregarEscolas();
 int obterNumeroEscolasRegistadas(Escola escolas[]);
-char *converterEscolasParaChar(Escola escolas[]);
-void converterCharParaEscolas(char charEscolas[], Escola escolas[]);
-void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas, Escola escolas[], char splitEscolas[]);
 void mostrarEscolas(Escola escolas[]);
 
 // Todas as funções relacionadas com utilizadores.
@@ -247,75 +244,6 @@ int obterNumeroEscolasRegistadas(Escola escolas[]) {
         }
     }
     return contador;
-}
-
-// Prepara os valores das escolas para depois serem guardados num ficheiro.
-char *converterEscolasParaChar(Escola escolas[])
-{
-    char *charEscolas = malloc(1024);
-    for (int index = 0; index < NUM_MAX_ESCOLAS; index++)
-    {
-        if (escolas[index].id > 0) {
-            char charEscola[200];
-            // Junta todas as variáveis da escolas[index] na variável charEscola.
-            sprintf(charEscola, "%d;%s;%s;%d;%s;", escolas[index].id, escolas[index].nome, escolas[index].abreviacao, escolas[index].campus, escolas[index].localidade);
-
-            // Se o strcat for usado com o array vazio vai
-            // vai adicionar símbolos estranho no início do index 0.
-            if (index > 0)
-            {
-                // Vai concatenar o charEscola com o charEscolas.
-                strcat(charEscolas, charEscola);
-            }
-            else
-            {
-                // Copia o charEscola para o charEscolas.
-                strcpy(charEscolas, charEscola);
-            }
-        }
-    }
-    return charEscolas;
-}
-
-// Vai retornar o número de escolas existentes.
-void converterCharParaEscolas(char charEscolas[], Escola escolas[]) {
-    int contadorEscolas = 0, contadorCamposEscola = 1;
-    // Vai dividir os valores a cada ; que encontrar.
-    char *splitEscolas = strtok(charEscolas, ";");
-
-    while (splitEscolas != NULL) { 
-        // Vai atualizar o array escolas conforme o contadorCamposEscola e o contadorEscolas.    
-        converterCharParaCampoEscola(contadorCamposEscola, contadorEscolas, escolas, splitEscolas);
-        contadorCamposEscola++;
-
-        // Assim que o contadorCamposEscola ficar maior signfica
-        // que o próximo registo já faz parte de outra escola.
-        if (contadorCamposEscola > NUM_CAMPOS_STRUCT_ESCOLA) {
-            contadorCamposEscola = 1;
-            contadorEscolas++;
-        }
-		splitEscolas = strtok(NULL, ";");
-	}
-}
-
-void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas, Escola escolas[], char splitEscolas[]) {
-     switch (contadorCamposEscola) {
-        case 1:
-            escolas[contadorEscolas].id = (atoi)(splitEscolas);
-            break;
-        case 2:
-            strcpy(escolas[contadorEscolas].nome, splitEscolas);
-            break;
-        case 3:
-            strcpy(escolas[contadorEscolas].abreviacao, splitEscolas);
-            break;
-        case 4:
-            escolas[contadorEscolas].campus = atoi(splitEscolas);
-            break;
-        case 5:
-            strcpy(escolas[contadorEscolas].localidade, splitEscolas);
-            break;
-    }
 }
 
 Utilizador registarUtilizador(int proximoId, Escola escolas[]) {
