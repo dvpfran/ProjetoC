@@ -3,8 +3,8 @@
 #include <stdlib.h>
 
 #define NUM_ESCOLAS 5
-#define NUM_UTilizadores 200
-#define NUM_Transacoes 5000
+#define NUM_UTILIZADORES 200
+#define NUM_TRANSACOES 5000
 
 #define TIPO_UTILIZADOR_ESTUDANTE 1
 #define TIPO_UTILIZADOR_DOCENTE 2
@@ -63,6 +63,7 @@ void menu_utilizadores();
 
 void carregarTodosDados();
 void guardarTodosDados();
+void inicializarArrays();
 
 // Todas as funções relacionadas com escolas.
 void inicializarArrayEscolas();
@@ -75,8 +76,14 @@ void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas,
 void mostrarEscolas(Escola escolas[]);
 
 // Todas as funções relacionadas com utilizadores.
+void inicializarArrayUtilizadores();
 Utilizador registarUtilizador();
 Utilizador ConsultarUtilizador();
+int obterNumeroUtilizadoresRegistados(Utilizador utilizadores[]);
+void mostrarEscolasUtilizador(Escola escolas[]);
+void mostrarUtilizadores(Utilizador utilizadores[]);
+char *buscarTipoUtilizador(int tipoUtilizador);
+void mostrarTiposUtilizador();
 
 // Todas as funções relacionadas com transações.
 Transacao RegistarTransacao();
@@ -92,11 +99,14 @@ void guardarDadosFicheiro(); // guardar em binário
 void main()
 {
     Escola escolas[NUM_ESCOLAS];
-    inicializarArrayEscolas(escolas);
+    Utilizador utilizadores[NUM_UTILIZADORES];
+
+    inicializarArrays(escolas, utilizadores);
 
     carregarTodosDados(escolas);
 
-    int escolasRegistadas = obterNumeroEscolasRegistadas(escolas);
+    int numEscolasRegistadas = obterNumeroEscolasRegistadas(escolas);
+    int numUtilizadoresRegistados = obterNumeroUtilizadoresRegistados(utilizadores);
 
     int opcaoMenu = 0;
     
@@ -105,17 +115,20 @@ void main()
 
         switch (opcaoMenu) {
             case OPCAO_MENU_ESCOLAS_REGISTAR:
-                escolas[escolasRegistadas] = registarEscola(escolasRegistadas);
+                escolas[numEscolasRegistadas] = registarEscola(numEscolasRegistadas);
                 break;
-
             case OPCAO_MENU_ESCOLAS_CONSULTAR:
                 mostrarEscolas(escolas);
                 break;
-
             case OPCAO_MENU_ESCOLAS_IMPORTAR:
                 carregarEscolas(escolas);
                 break;
-            
+            case OPCAO_MENU_UTILIZADORES_REGISTAR:
+                utilizadores[numUtilizadoresRegistados] = registarUtilizador(numUtilizadoresRegistados, escolas);
+                break;
+            case OPCAO_MENU_UTILIZADORES_CONSULTAR:
+                mostrarUtilizadores(utilizadores);
+                break;
             case OPCAO_MENU_SAIR:
             default:
                 break;
@@ -127,6 +140,11 @@ void main()
 
 // Vai inicializar o array das escolas e garantir que todos os id's comecem a 0.
 // Se o id tiver a 0 significa que a posição do array ainda não foi preenchida.
+void inicializarArrays(Escola escolas[], Utilizador utilizadores[]) {
+    inicializarArrayEscolas(escolas);
+    inicializarArrayUtilizadores(utilizadores);
+}
+
 void inicializarArrayEscolas(Escola escolas[]) {
     for (int index = 0; index < NUM_ESCOLAS; index++) {
         escolas[index].id = 0;
@@ -137,13 +155,26 @@ void inicializarArrayEscolas(Escola escolas[]) {
     }
 }
 
+void inicializarArrayUtilizadores(Utilizador utilizadores[]) {
+    for (int index = 0; index < NUM_UTILIZADORES; index++) {
+        utilizadores[index].id = 0;
+        utilizadores[index].idEscola = 0;
+        utilizadores[index].nif = 0;
+        utilizadores[index].tipoUtilizador = 0;
+        strcpy(utilizadores[index].email, "");
+        strcpy(utilizadores[index].nome, "");
+        utilizadores[index].saldo = 0;
+    }
+}
+
 int menu_opcoes() {
     int menuSelecionado = 0;
 
     printf("******************************** MENU PRINCIPAL ********************************\n");
     menu_escolas();
     menu_utilizadores();
-    printf("* %d - Sair               *\n", OPCAO_MENU_SAIR);
+    printf("*******\n");
+    printf("* [%d] * Sair               *\n", OPCAO_MENU_SAIR);
     printf("* Selecionar menu: ");
     scanf("%d", &menuSelecionado);
     printf("\n********************************************************************************\n");
@@ -151,17 +182,17 @@ int menu_opcoes() {
 }
 
 void menu_escolas() {
-    printf("******** Escolas: ********\n");
-    printf("* %d - Registar Escolas   *\n", OPCAO_MENU_ESCOLAS_REGISTAR);
-    printf("* %d - Consultar Escolas  *\n", OPCAO_MENU_ESCOLAS_CONSULTAR);
-    printf("* %d - Importar Escolas   *\n", OPCAO_MENU_ESCOLAS_IMPORTAR);
+    printf("******* Escolas: ********\n");
+    printf("* [%d] * Registar Escolas   *\n", OPCAO_MENU_ESCOLAS_REGISTAR);
+    printf("* [%d] * Consultar Escolas  *\n", OPCAO_MENU_ESCOLAS_CONSULTAR);
+    printf("* [%d] * Importar Escolas   *\n", OPCAO_MENU_ESCOLAS_IMPORTAR);
 }
 
 void menu_utilizadores() {
-    printf("******** Utilizadores: ********\n");
-    printf("* %d - Registar Utilizador   *\n", OPCAO_MENU_UTILIZADORES_REGISTAR);
-    printf("* %d - Consultar Utilizador   *\n", OPCAO_MENU_UTILIZADORES_CONSULTAR);
-    printf("* %d - Importar Utilizador   *\n", OPCAO_MENU_UTILIZADORES_IMPORTAR);
+    printf("******* Utilizadores: ********\n");
+    printf("* [%d] * Registar Utilizador   *\n", OPCAO_MENU_UTILIZADORES_REGISTAR);
+    printf("* [%d] * Consultar Utilizador   *\n", OPCAO_MENU_UTILIZADORES_CONSULTAR);
+    printf("* [%d] * Importar Utilizador   *\n", OPCAO_MENU_UTILIZADORES_IMPORTAR);
 }
 
 Escola registarEscola(int proximoId)
@@ -286,6 +317,91 @@ void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas,
             strcpy(escolas[contadorEscolas].localidade, splitEscolas);
             break;
     }
+}
+
+Utilizador registarUtilizador(int proximoId, Escola escolas[]) {
+    system("cls");
+    Utilizador utilizador;
+    utilizador.id = proximoId + 1;
+    printf("****** Registo de Novo Utilizador:\n");
+    mostrarEscolasUtilizador(escolas);
+    printf("* Id Escola: "); 
+    scanf("%d", &utilizador.idEscola);
+   
+    printf("* Nome: ");
+    scanf("%s", &utilizador.nome);
+    mostrarTiposUtilizador();   
+
+    printf("* Utilizador: ");
+    scanf("%d", &utilizador.tipoUtilizador);
+    printf("* Email: ");
+    scanf("%s", &utilizador.email);
+    
+    printf("* NIF: ");
+    scanf("%d", &utilizador.nif);
+
+    utilizador.saldo = 0;
+    
+    system("cls");
+
+    return utilizador;
+}
+
+void mostrarEscolasUtilizador(Escola escolas[]) {
+    printf("* Lista de escolas:\n");
+    for (int index = 0; index < NUM_ESCOLAS; index++) {
+        if (escolas[index].id > 0) {
+            printf("** Id: [%d] - Nome: %s\n", escolas[index].id, escolas[index].nome);
+        }
+    }
+}
+
+void mostrarUtilizadores(Utilizador utilizadores[]) {
+    system("cls");
+    for (int index = 0; index < NUM_UTILIZADORES; index++) {
+        if (utilizadores[index].id > 0) {
+            printf("* Id: %d\n", utilizadores[index].id);
+            printf("* Id Escola: %d\n", utilizadores[index].idEscola);
+            printf("* Nif: %d\n", utilizadores[index].nif);
+            printf("* Tipo Utilizador: %d\n", utilizadores[index].tipoUtilizador);
+            printf("* Email: %s\n", utilizadores[index].email);
+            printf("* Nome: %s\n", utilizadores[index].nome);
+            printf("* Saldo: %.2f\n", utilizadores[index].saldo);
+        }
+    }
+}
+
+void mostrarTiposUtilizador() {
+    printf("* Tipo utilizador: \n");
+    printf("** [%d] - %s\n", TIPO_UTILIZADOR_ESTUDANTE, buscarTipoUtilizador(TIPO_UTILIZADOR_ESTUDANTE));
+    printf("** [%d] - %s\n", TIPO_UTILIZADOR_DOCENTE, buscarTipoUtilizador(TIPO_UTILIZADOR_DOCENTE));
+    printf("** [%d] - %s\n", TIPO_UTILIZADOR_FUNCIONARIO, buscarTipoUtilizador(TIPO_UTILIZADOR_FUNCIONARIO));
+}
+
+int obterNumeroUtilizadoresRegistados(Utilizador utilizadores[]) {
+    int contador = 0;
+    for (int index = 0; index < NUM_UTILIZADORES; index++) {
+        if (utilizadores[index].id > 0) {
+            contador++;
+        }
+    }
+    return contador;
+}
+
+char *buscarTipoUtilizador(int tipoUtilizador) {
+    char *descricaoTipoUtilizador;
+    switch (tipoUtilizador) {
+        case TIPO_UTILIZADOR_ESTUDANTE:
+            descricaoTipoUtilizador = "Estudante";
+            break;
+        case TIPO_UTILIZADOR_DOCENTE:
+            descricaoTipoUtilizador = "Docente";
+            break;
+        case TIPO_UTILIZADOR_FUNCIONARIO:
+            descricaoTipoUtilizador = "Funcionario";
+            break;
+    }
+    return descricaoTipoUtilizador;
 }
 
 // Função para carregar todos os dados quando o programa é aberto
