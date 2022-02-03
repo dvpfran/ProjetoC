@@ -2,9 +2,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define NUM_ESCOLAS 5
-#define NUM_UTILIZADORES 200
-#define NUM_TRANSACOES 5000
+#define NUM_MAX_ESCOLAS 5
+#define NUM_MAX_UTILIZADORES 200
+#define NUM_MAX_TRANSACOES 5000
 
 #define TIPO_UTILIZADOR_ESTUDANTE 1
 #define TIPO_UTILIZADOR_DOCENTE 2
@@ -23,7 +23,7 @@
 #define OPCAO_MENU_ESTATISTICAS_PERCENTAGEM_PAGAMENTOS 12
 #define OPCAO_MENU_ESTATISTICAS_TOTAL_TRANSACOES_HORIZONTE_TEMPORAL 13
 
-#define PATH_ESCOLAS "dados_escolas.txt"
+#define PATH_ESCOLAS "dados_escolas.bin"
 
 typedef struct
 {
@@ -93,10 +93,13 @@ void ConsultarTotalFaturaEscola(); // apresentado no menu principal
 void PercentagemTransacoes();      // pagamentos por escola
 void TotalTransacao();             // pagamentos entre duas datas por tipo de utilizador
 
+void gravarFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char caminhoFicheiro[]);
+void lerFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char caminhoFicheiro[]);
+
 void main()
 {
-    Escola escolas[NUM_ESCOLAS];
-    Utilizador utilizadores[NUM_UTILIZADORES];
+    Escola escolas[NUM_MAX_ESCOLAS];
+    Utilizador utilizadores[NUM_MAX_UTILIZADORES];
 
     inicializarArrays(escolas, utilizadores);
 
@@ -143,7 +146,7 @@ void inicializarArrays(Escola escolas[], Utilizador utilizadores[]) {
 }
 
 void inicializarArrayEscolas(Escola escolas[]) {
-    for (int index = 0; index < NUM_ESCOLAS; index++) {
+    for (int index = 0; index < NUM_MAX_ESCOLAS; index++) {
         escolas[index].id = 0;
         strcpy(escolas[index].nome, "");
         strcpy(escolas[index].abreviacao, "");
@@ -153,7 +156,7 @@ void inicializarArrayEscolas(Escola escolas[]) {
 }
 
 void inicializarArrayUtilizadores(Utilizador utilizadores[]) {
-    for (int index = 0; index < NUM_UTILIZADORES; index++) {
+    for (int index = 0; index < NUM_MAX_UTILIZADORES; index++) {
         utilizadores[index].id = 0;
         utilizadores[index].idEscola = 0;
         utilizadores[index].nif = 0;
@@ -212,14 +215,13 @@ Escola registarEscola(int proximoId)
 }
 
 void carregarEscolas(Escola escolas[]) {
-    // char *dadosEscolas = lerDadosFicheiro(PATH_ESCOLAS);
-    // converterCharParaEscolas(dadosEscolas, escolas);
+    lerFicheiro(escolas, sizeof(Escola), NUM_MAX_ESCOLAS, PATH_ESCOLAS);
 }
 
 void mostrarEscolas(Escola escolas[])
 {
     system("cls");
-    for (int index = 0; index < NUM_ESCOLAS; index++)
+    for (int index = 0; index < NUM_MAX_ESCOLAS; index++)
     {
         if (escolas[index].id > 0) {
             printf("********************************************************************************\n");
@@ -230,7 +232,7 @@ void mostrarEscolas(Escola escolas[])
             printf("* Localidade: %s\n", escolas[index].localidade);
         }
 
-        if (index + 1 == NUM_ESCOLAS)
+        if (index + 1 == NUM_MAX_ESCOLAS)
         {
             printf("********************************************************************************\n");
         }
@@ -239,7 +241,7 @@ void mostrarEscolas(Escola escolas[])
 
 int obterNumeroEscolasRegistadas(Escola escolas[]) {
     int contador = 0;
-    for (int index = 0; index < NUM_ESCOLAS; index++) {
+    for (int index = 0; index < NUM_MAX_ESCOLAS; index++) {
         if (escolas[index].id > 0) {
             contador++;
         }
@@ -251,7 +253,7 @@ int obterNumeroEscolasRegistadas(Escola escolas[]) {
 char *converterEscolasParaChar(Escola escolas[])
 {
     char *charEscolas = malloc(1024);
-    for (int index = 0; index < NUM_ESCOLAS; index++)
+    for (int index = 0; index < NUM_MAX_ESCOLAS; index++)
     {
         if (escolas[index].id > 0) {
             char charEscola[200];
@@ -346,7 +348,7 @@ Utilizador registarUtilizador(int proximoId, Escola escolas[]) {
 
 void mostrarEscolasUtilizador(Escola escolas[]) {
     printf("* Lista de escolas:\n");
-    for (int index = 0; index < NUM_ESCOLAS; index++) {
+    for (int index = 0; index < NUM_MAX_ESCOLAS; index++) {
         if (escolas[index].id > 0) {
             printf("** Id: [%d] - Nome: %s\n", escolas[index].id, escolas[index].nome);
         }
@@ -355,7 +357,7 @@ void mostrarEscolasUtilizador(Escola escolas[]) {
 
 void mostrarUtilizadores(Utilizador utilizadores[]) {
     system("cls");
-    for (int index = 0; index < NUM_UTILIZADORES; index++) {
+    for (int index = 0; index < NUM_MAX_UTILIZADORES; index++) {
         if (utilizadores[index].id > 0) {
             printf("* Id: %d\n", utilizadores[index].id);
             printf("* Id Escola: %d\n", utilizadores[index].idEscola);
@@ -377,7 +379,7 @@ void mostrarTiposUtilizador() {
 
 int obterNumeroUtilizadoresRegistados(Utilizador utilizadores[]) {
     int contador = 0;
-    for (int index = 0; index < NUM_UTILIZADORES; index++) {
+    for (int index = 0; index < NUM_MAX_UTILIZADORES; index++) {
         if (utilizadores[index].id > 0) {
             contador++;
         }
@@ -411,4 +413,53 @@ void carregarTodosDados(Escola escolas[]) {
 // Escolas - Utilizadores - Transações
 void guardarTodosDados(Escola escolas[]) {
     // Escolas
+    gravarFicheiro(escolas, sizeof(Escola), NUM_MAX_ESCOLAS, PATH_ESCOLAS);
+}
+
+void lerFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char caminhoFicheiro[])
+{
+    FILE *ficheiro = fopen(caminhoFicheiro, "rb");
+    int num_elementos_lidos_sucesso = 0;
+
+    if(ficheiro == NULL)
+    {
+        printf("\nNao foi possivel abrir o ficheiro indicado. \n");
+    }
+    else
+    {
+        num_elementos_lidos_sucesso = fread(buffer, numCamposStruct, tamanhoArray, ficheiro);
+        if(num_elementos_lidos_sucesso == 0 )
+        {
+            printf("Nao foi possivel ler o ficheiro: %s \n ", caminhoFicheiro);
+        }
+        else
+        {
+            printf("Leitura do ficheiro bem sucedida. \n ", caminhoFicheiro);
+        }
+    }
+    fclose(ficheiro);
+}
+
+void gravarFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char caminhoFicheiro[])
+{
+    FILE *ficheiro = fopen(caminhoFicheiro, "wb");
+    int num_elementos_escritos_sucesso = 0;
+
+    if(ficheiro == NULL)
+    {
+        printf("\n Nao foi possivel abrir o ficheiro indicado \n");
+    }
+    else
+    {
+        num_elementos_escritos_sucesso = fwrite(buffer, numCamposStruct, tamanhoArray, ficheiro);
+        if(num_elementos_escritos_sucesso ==0 )
+        {
+            printf("Nao foi possivel escrever para o ficheiro indicado: %s \n ", caminhoFicheiro);
+        }
+        else
+        {
+            printf("Escrita bem sucedida para o ficheiro: %s \n ", caminhoFicheiro);
+        }
+    }
+    fclose(ficheiro);
 }
