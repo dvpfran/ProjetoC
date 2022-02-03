@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define NUM_MAX_ESCOLAS 5
 #define NUM_MAX_UTILIZADORES 200
@@ -9,6 +10,9 @@
 #define TIPO_UTILIZADOR_ESTUDANTE 1
 #define TIPO_UTILIZADOR_DOCENTE 2
 #define TIPO_UTILIZADOR_FUNCIONARIO 3
+
+#define TIPO_TRANSACAO_PAGAMENTO 1
+#define TIPO_TRANSACAO_CARREGAMENTO 2
 
 #define OPCAO_MENU_SAIR 0
 #define OPCAO_MENU_ESCOLAS_REGISTAR 1
@@ -69,6 +73,8 @@ void carregarTodosDados();
 void guardarTodosDados();
 void inicializarArrays();
 
+char* buscarDataAtual();
+
 // Todas as funções relacionadas com escolas.
 void inicializarArrayEscolas();
 Escola registarEscola(int proximoId);
@@ -85,13 +91,17 @@ void mostrarEscolasUtilizador(Escola escolas[]);
 void mostrarUtilizadores(Utilizador utilizadores[]);
 char *buscarTipoUtilizador(int tipoUtilizador);
 void mostrarTiposUtilizador();
+int selecionarIdUtilizador(Utilizador utilizadores[]);
+void atualizarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador, int tipoTransacao, float valor);
 
 // Todas as funções relacionadas com transações.
 void inicializarArrayTransacoes();
-Transacao registarTransacao(Transacao transacoes[]);
+Transacao registarTransacao(int numTransacoes, int idUtilizador, int tipoTransacao, float valor);
 void consultarTransacao(Transacao transacoes[]);
 void consultarTransacoes(Transacao transacoes[]);
 int obterNumeroTransacoesRegistadas(Transacao transacoes[]);
+int selecionarTipoTransacao();
+float pedirValorTransacao(int tipoTransacao);
 
 void ConsultarTotalFaturaEscola(); // apresentado no menu principal
 void PercentagemTransacoes();      // pagamentos por escola
@@ -111,7 +121,7 @@ void main()
 
     int numEscolasRegistadas = obterNumeroEscolasRegistadas(escolas);
     int numUtilizadoresRegistados = obterNumeroUtilizadoresRegistados(utilizadores);
-    int numTransacoesRegistadas = obterNumeroUtilizadoresRegistados(utilizadores);
+    int numTransacoesRegistadas = obterNumeroTransacoesRegistadas(transacoes);
 
     int opcaoMenu = 0;
     
@@ -136,7 +146,12 @@ void main()
                 break;
 
             case OPCAO_MENU_TRANSACOES_REGISTAR:
-                registarTransacao(transacoes);
+                printf("* A abrir menu: registar transacoes\n");
+                int idUtilizador = selecionarIdUtilizador(utilizadores);
+                int tipoTransacao = selecionarTipoTransacao();
+                float valorTransacao = pedirValorTransacao(tipoTransacao);
+                atualizarSaldoUtilizador(utilizadores, idUtilizador, tipoTransacao, valorTransacao);
+                transacoes[numTransacoesRegistadas] = registarTransacao(numTransacoesRegistadas, idUtilizador, tipoTransacao, valorTransacao);
                 break;
 
             case OPCAO_MENU_TRANSACOES_CONSULTAR:
@@ -319,6 +334,7 @@ void mostrarUtilizadores(Utilizador utilizadores[]) {
     system("cls");
     for (int index = 0; index < NUM_MAX_UTILIZADORES; index++) {
         if (utilizadores[index].id > 0) {
+            printf("********************************************************************************\n");
             printf("* Id: %d\n", utilizadores[index].id);
             printf("* Id Escola: %d\n", utilizadores[index].idEscola);
             printf("* Nif: %d\n", utilizadores[index].nif);
@@ -326,6 +342,11 @@ void mostrarUtilizadores(Utilizador utilizadores[]) {
             printf("* Email: %s\n", utilizadores[index].email);
             printf("* Nome: %s\n", utilizadores[index].nome);
             printf("* Saldo: %.2f\n", utilizadores[index].saldo);
+        }
+
+        if (index + 1 == NUM_MAX_UTILIZADORES)
+        {
+            printf("********************************************************************************\n");
         }
     }
 }
@@ -367,12 +388,71 @@ void carregarUtilizadores(Utilizador utilizadores[]) {
     lerFicheiro(utilizadores, sizeof(Utilizador), NUM_MAX_UTILIZADORES, PATH_UTILIZADORES);
 }
 
-Transacao registarTransacao(Transacao transacoes[]) {
+int selecionarIdUtilizador(Utilizador utilizadores[]) {
+    system("cls");
+    int utilizador = 0;
+    for (int index = 0; index < NUM_MAX_UTILIZADORES; index++) {
+        if (utilizadores[index].id > 0) {
+            printf("** Id: [%d] - Nome: %s - Tipo Utilizador: %s\n", utilizadores[index].id, utilizadores[index].nome, buscarTipoUtilizador(utilizadores[index].tipoUtilizador));
+        }
+    }
+    printf("* Selecione um dos utilizadores a cima para continuar a transacao: ");
+    scanf("%d", &utilizador);
+    return utilizador;
+}
 
+Transacao registarTransacao(int numTransacoes, int idUtilizador, int tipoTransacao, float valor) {
+    Transacao transacao;
+    transacao.id = numTransacoes + 1;
+    transacao.idUtilizador = idUtilizador;
+    transacao.tipoTransacao = tipoTransacao;
+    transacao.valorTransacao = valor;
+    strcpy(transacao.dataHora, buscarDataAtual());
+    return transacao;
+}
+
+void atualizarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador, int tipoTransacao, float valor) {
+    for(int index = 0; index < NUM_MAX_UTILIZADORES; index++) {
+        if (utilizadores[index].id == idUtilizador) {
+            if (tipoTransacao == TIPO_TRANSACAO_PAGAMENTO) {
+                utilizadores[index].saldo -= valor;
+            }
+            if (tipoTransacao == TIPO_TRANSACAO_CARREGAMENTO) {
+                utilizadores[index].saldo += valor;
+            }
+            index = NUM_MAX_UTILIZADORES;
+        }
+    }
+    
 }
 
 void consultarTransacoes(Transacao transacoes[]) {
 
+}
+
+int selecionarTipoTransacao() {
+    int tipoTransacao = 0;
+    printf("* Tipo de transacao: \n");
+    printf("** [%d] - Pagamento\n", TIPO_TRANSACAO_PAGAMENTO);
+    printf("** [%d] - Carregamento\n", TIPO_TRANSACAO_CARREGAMENTO);
+    printf("* Selecionar tipo de transacao: ");
+    scanf("%d", &tipoTransacao);
+    return tipoTransacao;
+}
+
+float pedirValorTransacao(int tipoTransacao) {
+    float valor = 0;
+    
+    if (tipoTransacao == TIPO_TRANSACAO_PAGAMENTO) {
+        printf("Valor do pagamento: ");
+    }
+
+    if (tipoTransacao == TIPO_TRANSACAO_CARREGAMENTO) {
+        printf("Valor do carregamento: ");
+    }
+
+    scanf("%f", &valor);
+    return valor;
 }
 
 int obterNumeroTransacoesRegistadas(Transacao transacoes[]) {
@@ -387,6 +467,12 @@ int obterNumeroTransacoesRegistadas(Transacao transacoes[]) {
 
 void carregarTransacoes(Transacao transacoes[]) {
     lerFicheiro(transacoes, sizeof(Transacao), NUM_MAX_TRANSACOES, PATH_TRANSACOES);
+}
+
+char* buscarDataAtual() {
+    time_t t;
+    time(&t);
+    return ctime(&t);
 }
 
 // Função para carregar todos os dados quando o programa é aberto
@@ -413,7 +499,7 @@ void lerFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char camin
 
     if(ficheiro == NULL)
     {
-        printf("\nNao foi possivel abrir o ficheiro indicado.\n");
+        printf("Nao foi possivel abrir o ficheiro indicado: %s.\n", caminhoFicheiro);
     }
     else
     {
@@ -437,7 +523,7 @@ void gravarFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char ca
 
     if(ficheiro == NULL)
     {
-        printf("\nNao foi possivel abrir o ficheiro indicado \n");
+        printf("Nao foi possivel abrir o ficheiro indicado %s\n", caminhoFicheiro);
     }
     else
     {
