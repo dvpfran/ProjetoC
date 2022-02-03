@@ -24,6 +24,7 @@
 #define OPCAO_MENU_ESTATISTICAS_TOTAL_TRANSACOES_HORIZONTE_TEMPORAL 13
 
 #define PATH_ESCOLAS "dados_escolas.bin"
+#define PATH_UTILIZADORES "dados_utilizadores.bin"
 
 typedef struct
 {
@@ -100,7 +101,7 @@ void main()
 
     inicializarArrays(escolas, utilizadores);
 
-    carregarTodosDados(escolas);
+    carregarTodosDados(escolas, utilizadores);
 
     int numEscolasRegistadas = obterNumeroEscolasRegistadas(escolas);
     int numUtilizadoresRegistados = obterNumeroUtilizadoresRegistados(utilizadores);
@@ -132,7 +133,7 @@ void main()
         }
     } while (opcaoMenu != OPCAO_MENU_SAIR);
 
-    guardarTodosDados(escolas);
+    guardarTodosDados(escolas, utilizadores);
 }
 
 // Vai inicializar o array das escolas e garantir que todos os id's comecem a 0.
@@ -331,17 +332,23 @@ char *buscarTipoUtilizador(int tipoUtilizador) {
     return descricaoTipoUtilizador;
 }
 
+void carregarUtilizadores(Utilizador utilizadores[]) {
+    lerFicheiro(utilizadores, sizeof(Utilizador), NUM_MAX_UTILIZADORES, PATH_UTILIZADORES);
+}
+
 // Função para carregar todos os dados quando o programa é aberto
 // Escolas - Utilizadores - Transações - Etc
-void carregarTodosDados(Escola escolas[]) {
+void carregarTodosDados(Escola escolas[], Utilizador utilizadores[]) {
     carregarEscolas(escolas);
+    carregarUtilizadores(utilizadores);
 }
 
 // Função para guardar todos os dados
 // Escolas - Utilizadores - Transações
-void guardarTodosDados(Escola escolas[]) {
+void guardarTodosDados(Escola escolas[], Utilizador utilizadores[]) {
     // Escolas
     gravarFicheiro(escolas, sizeof(Escola), NUM_MAX_ESCOLAS, PATH_ESCOLAS);
+    gravarFicheiro(utilizadores, sizeof(Utilizador), NUM_MAX_UTILIZADORES, PATH_UTILIZADORES);
 }
 
 void lerFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char caminhoFicheiro[])
@@ -351,18 +358,18 @@ void lerFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char camin
 
     if(ficheiro == NULL)
     {
-        printf("\nNao foi possivel abrir o ficheiro indicado. \n");
+        printf("\nNao foi possivel abrir o ficheiro indicado.\n");
     }
     else
     {
         num_elementos_lidos_sucesso = fread(buffer, numCamposStruct, tamanhoArray, ficheiro);
         if(num_elementos_lidos_sucesso == 0 )
         {
-            printf("Nao foi possivel ler o ficheiro: %s \n ", caminhoFicheiro);
+            printf("Nao foi possivel ler o ficheiro: %s\n", caminhoFicheiro);
         }
         else
         {
-            printf("Leitura do ficheiro bem sucedida. \n ", caminhoFicheiro);
+            printf("Dados carregados do ficheiro: %s.\n", caminhoFicheiro);
         }
     }
     fclose(ficheiro);
@@ -375,18 +382,18 @@ void gravarFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char ca
 
     if(ficheiro == NULL)
     {
-        printf("\n Nao foi possivel abrir o ficheiro indicado \n");
+        printf("\nNao foi possivel abrir o ficheiro indicado \n");
     }
     else
     {
         num_elementos_escritos_sucesso = fwrite(buffer, numCamposStruct, tamanhoArray, ficheiro);
         if(num_elementos_escritos_sucesso ==0 )
         {
-            printf("Nao foi possivel escrever para o ficheiro indicado: %s \n ", caminhoFicheiro);
+            printf("Nao foi possivel escrever para o ficheiro indicado: %s \n", caminhoFicheiro);
         }
         else
         {
-            printf("Escrita bem sucedida para o ficheiro: %s \n ", caminhoFicheiro);
+            printf("Escrita bem sucedida para o ficheiro: %s \n", caminhoFicheiro);
         }
     }
     fclose(ficheiro);
