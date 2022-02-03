@@ -13,11 +13,12 @@
 #define OPCAO_MENU_SAIR 0
 #define OPCAO_MENU_ESCOLAS_REGISTAR 1
 #define OPCAO_MENU_ESCOLAS_CONSULTAR 2
-#define OPCAO_MENU_ESCOLAS_IMPORTAR 3
 
-#define OPCAO_MENU_UTILIZADORES_REGISTAR 4
-#define OPCAO_MENU_UTILIZADORES_CONSULTAR 5
-#define OPCAO_MENU_UTILIZADORES_IMPORTAR 6
+#define OPCAO_MENU_UTILIZADORES_REGISTAR 3
+#define OPCAO_MENU_UTILIZADORES_CONSULTAR 4
+
+#define OPCAO_MENU_TRANSACOES_REGISTAR 5
+#define OPCAO_MENU_TRANSACOES_CONSULTAR 6
 
 #define OPCAO_MENU_ESTATISTICAS_TOTAL_FATURADO_ESCOLA 11
 #define OPCAO_MENU_ESTATISTICAS_PERCENTAGEM_PAGAMENTOS 12
@@ -25,6 +26,7 @@
 
 #define PATH_ESCOLAS "dados_escolas.bin"
 #define PATH_UTILIZADORES "dados_utilizadores.bin"
+#define PATH_TRANSACOES "dados_transacoes.bin"
 
 typedef struct
 {
@@ -84,6 +86,7 @@ char *buscarTipoUtilizador(int tipoUtilizador);
 void mostrarTiposUtilizador();
 
 // Todas as funções relacionadas com transações.
+void inicializarArrayTransacoes();
 Transacao RegistarTransacao();
 Transacao ConsultarTransacao();
 
@@ -98,10 +101,10 @@ void main()
 {
     Escola escolas[NUM_MAX_ESCOLAS];
     Utilizador utilizadores[NUM_MAX_UTILIZADORES];
+    Transacao transacoes[NUM_MAX_TRANSACOES];
 
-    inicializarArrays(escolas, utilizadores);
-
-    carregarTodosDados(escolas, utilizadores);
+    inicializarArrays(escolas, utilizadores, transacoes);
+    carregarTodosDados(escolas, utilizadores, transacoes);
 
     int numEscolasRegistadas = obterNumeroEscolasRegistadas(escolas);
     int numUtilizadoresRegistados = obterNumeroUtilizadoresRegistados(utilizadores);
@@ -118,9 +121,6 @@ void main()
             case OPCAO_MENU_ESCOLAS_CONSULTAR:
                 mostrarEscolas(escolas);
                 break;
-            case OPCAO_MENU_ESCOLAS_IMPORTAR:
-                carregarEscolas(escolas);
-                break;
             case OPCAO_MENU_UTILIZADORES_REGISTAR:
                 utilizadores[numUtilizadoresRegistados] = registarUtilizador(numUtilizadoresRegistados, escolas);
                 break;
@@ -133,14 +133,15 @@ void main()
         }
     } while (opcaoMenu != OPCAO_MENU_SAIR);
 
-    guardarTodosDados(escolas, utilizadores);
+    guardarTodosDados(escolas, utilizadores, transacoes);
 }
 
 // Vai inicializar o array das escolas e garantir que todos os id's comecem a 0.
 // Se o id tiver a 0 significa que a posição do array ainda não foi preenchida.
-void inicializarArrays(Escola escolas[], Utilizador utilizadores[]) {
+void inicializarArrays(Escola escolas[], Utilizador utilizadores[], Transacao transacoes[]) {
     inicializarArrayEscolas(escolas);
     inicializarArrayUtilizadores(utilizadores);
+    inicializarArrayTransacoes(transacoes);
 }
 
 void inicializarArrayEscolas(Escola escolas[]) {
@@ -165,6 +166,15 @@ void inicializarArrayUtilizadores(Utilizador utilizadores[]) {
     }
 }
 
+void inicializarArrayTransacoes(Transacao transacoes[]) {
+    for (int index = 0; index < NUM_MAX_TRANSACOES; index++) {
+        transacoes[index].id = 0;
+        transacoes[index].idUtilizador = 0;
+        transacoes[index].valorTransacao = 0;
+        strcpy(transacoes[index].dataHora, "");
+    }
+}
+
 int menu_opcoes() {
     int menuSelecionado = 0;
 
@@ -183,14 +193,18 @@ void menu_escolas() {
     printf("******* Escolas: ********\n");
     printf("* [%d] * Registar Escolas   *\n", OPCAO_MENU_ESCOLAS_REGISTAR);
     printf("* [%d] * Consultar Escolas  *\n", OPCAO_MENU_ESCOLAS_CONSULTAR);
-    printf("* [%d] * Importar Escolas   *\n", OPCAO_MENU_ESCOLAS_IMPORTAR);
 }
 
 void menu_utilizadores() {
     printf("******* Utilizadores: ********\n");
     printf("* [%d] * Registar Utilizador   *\n", OPCAO_MENU_UTILIZADORES_REGISTAR);
     printf("* [%d] * Consultar Utilizador   *\n", OPCAO_MENU_UTILIZADORES_CONSULTAR);
-    printf("* [%d] * Importar Utilizador   *\n", OPCAO_MENU_UTILIZADORES_IMPORTAR);
+}
+
+void menu_transacoes() {
+    printf("******* Transacoes: ********\n");
+    printf("* [%d] * Registar Transacao   *\n", OPCAO_MENU_TRANSACOES_REGISTAR);
+    printf("* [%d] * Consultar Transacao   *\n", OPCAO_MENU_TRANSACOES_CONSULTAR);
 }
 
 Escola registarEscola(int proximoId)
@@ -345,10 +359,11 @@ void carregarTodosDados(Escola escolas[], Utilizador utilizadores[]) {
 
 // Função para guardar todos os dados
 // Escolas - Utilizadores - Transações
-void guardarTodosDados(Escola escolas[], Utilizador utilizadores[]) {
+void guardarTodosDados(Escola escolas[], Utilizador utilizadores[], Transacao transacoes[]) {
     // Escolas
     gravarFicheiro(escolas, sizeof(Escola), NUM_MAX_ESCOLAS, PATH_ESCOLAS);
     gravarFicheiro(utilizadores, sizeof(Utilizador), NUM_MAX_UTILIZADORES, PATH_UTILIZADORES);
+    gravarFicheiro(transacoes, sizeof(Transacao), NUM_MAX_TRANSACOES, PATH_TRANSACOES);
 }
 
 void lerFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char caminhoFicheiro[])
