@@ -61,7 +61,8 @@ typedef struct
     int idUtilizador;
     int tipoTransacao; // Carregamento Pagamento
     float valorTransacao;
-    char dataHora[50];
+    char data[20];
+    char hora[20];
 } Transacao;
 
 int menu_opcoes();
@@ -74,6 +75,7 @@ void guardarTodosDados();
 void inicializarArrays();
 
 char* buscarDataAtual();
+char* buscarHoraAtual();
 
 // Todas as funções relacionadas com escolas.
 void inicializarArrayEscolas();
@@ -96,6 +98,7 @@ void atualizarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador, int t
 float buscarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador);
 Utilizador buscarUtilizador(int idUtilizador, Utilizador utilizadores[]);
 void realizarRegistoUtilizador(int numUtilizadoresRegistados, int numEscolasRegistadas, Escola escolas[], Utilizador utilizadores[]);
+int existeAlgumUtilizador(Utilizador utilizadores[]);
 
 // Todas as funções relacionadas com transações.
 void inicializarArrayTransacoes();
@@ -107,7 +110,6 @@ int obterNumeroTransacoesRegistadas(Transacao transacoes[]);
 int selecionarTipoTransacao();
 char * buscarTipoTransacao(int tipoTransacao);
 float pedirValorTransacao(int tipoTransacao);
-
 
 void ConsultarTotalFaturaEscola(); // apresentado no menu principal
 void PercentagemTransacoes();      // pagamentos por escola
@@ -137,6 +139,7 @@ void main()
         switch (opcaoMenu) {
             case OPCAO_MENU_ESCOLAS_REGISTAR:
                 escolas[numEscolasRegistadas] = registarEscola(numEscolasRegistadas);
+                numEscolasRegistadas++;
                 break;
 
             case OPCAO_MENU_ESCOLAS_CONSULTAR:
@@ -203,7 +206,8 @@ void inicializarArrayTransacoes(Transacao transacoes[]) {
         transacoes[index].id = 0;
         transacoes[index].idUtilizador = 0;
         transacoes[index].valorTransacao = 0;
-        strcpy(transacoes[index].dataHora, "");
+        strcpy(transacoes[index].data, "");
+        strcpy(transacoes[index].hora, "");
     }
 }
 
@@ -242,6 +246,7 @@ void menu_transacoes() {
 
 Escola registarEscola(int proximoId)
 {
+    system("cls");
     Escola escola;
     escola.id = proximoId + 1;
     printf("* Registo de nova escola\n");
@@ -255,7 +260,6 @@ Escola registarEscola(int proximoId)
     scanf("%d", &escola.campus);
     
     system("cls");
-
     return escola;
 }
 
@@ -301,7 +305,6 @@ int obterNumeroEscolasRegistadas(Escola escolas[]) {
 }
 
 Utilizador registarUtilizador(int proximoId, Escola escolas[]) {
-    system("cls");
     Utilizador utilizador;
     utilizador.id = proximoId + 1;
     printf("****** Registo de Novo Utilizador:\n");
@@ -324,6 +327,7 @@ Utilizador registarUtilizador(int proximoId, Escola escolas[]) {
 }
 
 void realizarRegistoUtilizador(int numUtilizadoresRegistados, int numEscolasRegistadas, Escola escolas[], Utilizador utilizadores[]) {
+    system("cls");
     if (numEscolasRegistadas > 0) {
         utilizadores[numUtilizadoresRegistados] = registarUtilizador(numUtilizadoresRegistados, escolas);
     }
@@ -437,27 +441,40 @@ float buscarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador) {
     }
 }
 
-void realizarTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas) {
-    int idUtilizador = selecionarIdUtilizador(utilizadores);
-    int tipoTransacao = selecionarTipoTransacao();
-
-    float valorTransacao = pedirValorTransacao(tipoTransacao);
-
-    int dinheiroSuficiente = 1;
-    float saldoUtilizador = 0;
-
-    if (tipoTransacao == TIPO_TRANSACAO_PAGAMENTO) {
-        saldoUtilizador = buscarSaldoUtilizador(utilizadores, idUtilizador);
-        dinheiroSuficiente = saldoUtilizador > valorTransacao;
+int existeAlgumUtilizador(Utilizador utilizador[]) {
+    int existe = 0;
+    for(int index = 0; index < NUM_MAX_UTILIZADORES; index++) {
+        if (utilizador[index].id > 0) {
+            existe = 1;
+            index = NUM_MAX_UTILIZADORES;
+        }
     }
+    return existe;
+}
 
-    if (dinheiroSuficiente == 1) {
-        atualizarSaldoUtilizador(utilizadores, idUtilizador, tipoTransacao, valorTransacao);
-        transacoes[numTransacoesRegistadas] = registarTransacao(numTransacoesRegistadas, idUtilizador, tipoTransacao, valorTransacao);
+void realizarTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas) {
+    system("cls");
+    if (existeAlgumUtilizador(utilizadores) == 1 ) {
+        int idUtilizador = selecionarIdUtilizador(utilizadores);
+        int tipoTransacao = selecionarTipoTransacao();
+        float valorTransacao = pedirValorTransacao(tipoTransacao);
+        int dinheiroSuficiente = 1;
+        float saldoUtilizador = 0;
+        if (tipoTransacao == TIPO_TRANSACAO_PAGAMENTO) {
+            saldoUtilizador = buscarSaldoUtilizador(utilizadores, idUtilizador);
+            dinheiroSuficiente = saldoUtilizador > valorTransacao;
+        }
+        if (dinheiroSuficiente == 1) {
+            atualizarSaldoUtilizador(utilizadores, idUtilizador, tipoTransacao, valorTransacao);
+            transacoes[numTransacoesRegistadas] = registarTransacao(numTransacoesRegistadas, idUtilizador, tipoTransacao, valorTransacao);
+        }
+        else {
+            printf("* Utilizador com saldo insuficiente para realizar o pagamento.\n");
+            printf("* Saldo utilizador: %.2f\n", saldoUtilizador);
+        }
     }
     else {
-        printf("* Utilizador com saldo insuficiente para realizar o pagamento.\n");
-        printf("* Saldo utilizador: %.2f\n", saldoUtilizador);
+        printf("* Nao e possivel realizar uma transacao sem utilizadores registados.\n");
     }
 }
 
@@ -467,7 +484,8 @@ Transacao registarTransacao(int numTransacoes, int idUtilizador, int tipoTransac
     transacao.idUtilizador = idUtilizador;
     transacao.tipoTransacao = tipoTransacao;
     transacao.valorTransacao = valor;
-    strcpy(transacao.dataHora, buscarDataAtual());
+    strcpy(transacao.data, buscarDataAtual());
+    strcpy(transacao.hora, buscarHoraAtual());
     return transacao;
 }
 
@@ -497,12 +515,13 @@ void consultarTransacoes(Transacao transacoes[], Utilizador utilizadores[]) {
     for (int index = 0; index < NUM_MAX_TRANSACOES; index++) {
         if (transacoes[index].id > 0) {
             existeTransacoes = 1;
-            printf("* Transacao: %d - Utilizador: %s - Tipo Transacao: %s - Valor: %.2f - Data: %s", 
+            printf("* Transacao: %d - Utilizador: %s - Tipo Transacao: %s - Valor: %.2f - Data: %s - Hora: %s\n", 
                 transacoes[index].id, 
                 buscarUtilizador(transacoes[index].idUtilizador, utilizadores).nome, 
                 buscarTipoTransacao(transacoes[index].tipoTransacao), 
                 transacoes[index].valorTransacao, 
-                transacoes[index].dataHora);
+                transacoes[index].data,
+                transacoes[index].hora);
         }
         if (index + 1 == NUM_MAX_TRANSACOES) {
             if (existeTransacoes == 0) {
@@ -569,6 +588,20 @@ char* buscarDataAtual() {
     time_t t;
     time(&t);
     return ctime(&t);
+}
+
+char* buscarHoraAtual() {
+    char* charHora;
+
+    time_t horaAtual = time(NULL);
+    struct tm *tm_struct  = localtime(&horaAtual);
+    int hora = tm_struct ->tm_hour;
+    int minuto = tm_struct ->tm_min;
+    int segundo = tm_struct ->tm_sec;
+
+    sprintf(charHora, "%d:%d:%d", hora, minuto, segundo);
+
+    return charHora;
 }
 
 // Função para carregar todos os dados quando o programa é aberto
