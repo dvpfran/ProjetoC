@@ -250,8 +250,8 @@ int menu_opcoes() {
     menu_transacoes();
     menu_estatisticas();
     printf("*******\n");
-    printf("* [%d] * Guardar dados      *\n", OPCAO_MENU_GUARDAR_DADOS);
-    printf("* [%d]  * Sair               *\n", OPCAO_MENU_SAIR);
+    printf("* [%d] * Guardar dados\n", OPCAO_MENU_GUARDAR_DADOS);
+    printf("* [%d]  * Sair\n", OPCAO_MENU_SAIR);
     printf("* Selecionar menu: ");
     scanf("%d", &menuSelecionado);
     printf("\n********************************************************************************\n");
@@ -260,20 +260,20 @@ int menu_opcoes() {
 
 void menu_escolas() {
     printf("******* Escolas: ********\n");
-    printf("* [%d] * Registar Escolas   *\n", OPCAO_MENU_ESCOLAS_REGISTAR);
-    printf("* [%d] * Consultar Escolas  *\n", OPCAO_MENU_ESCOLAS_CONSULTAR);
+    printf("* [%d] * Registar Escolas\n", OPCAO_MENU_ESCOLAS_REGISTAR);
+    printf("* [%d] * Consultar Escolas\n", OPCAO_MENU_ESCOLAS_CONSULTAR);
 }
 
 void menu_utilizadores() {
     printf("******* Utilizadores: ********\n");
-    printf("* [%d] * Registar Utilizador   *\n", OPCAO_MENU_UTILIZADORES_REGISTAR);
-    printf("* [%d] * Consultar Utilizador   *\n", OPCAO_MENU_UTILIZADORES_CONSULTAR);
+    printf("* [%d] * Registar Utilizador\n", OPCAO_MENU_UTILIZADORES_REGISTAR);
+    printf("* [%d] * Consultar Utilizador\n", OPCAO_MENU_UTILIZADORES_CONSULTAR);
 }
 
 void menu_transacoes() {
     printf("******* Transacoes: ********\n");
-    printf("* [%d] * Registar Transacao   *\n", OPCAO_MENU_TRANSACOES_REGISTAR);
-    printf("* [%d] * Consultar Transacao   *\n", OPCAO_MENU_TRANSACOES_CONSULTAR);
+    printf("* [%d] * Registar Transacao\n", OPCAO_MENU_TRANSACOES_REGISTAR);
+    printf("* [%d] * Consultar Transacao\n", OPCAO_MENU_TRANSACOES_CONSULTAR);
 }
 
 void menu_estatisticas() {
@@ -754,6 +754,7 @@ void filtrarTotalPagamentos(Transacao transacoes[], Utilizador utilizadores[]) {
     mostrarTotalPagamentosFiltro(dataInicio, dataFim, transacoes, utilizadores, tipoUtilizador);
 }
 
+// Filtro não está a ser feito
 void mostrarTotalPagamentosFiltro(char *dataInicio, char *dataFim, Transacao transacoes[], Utilizador utilizadores[], int tipoUtilizador) {
     int totalTransacoes = 0;
     for(int indexTransacao = 0; indexTransacao < NUM_MAX_TRANSACOES; indexTransacao++) {
