@@ -129,19 +129,19 @@ void main()
     inicializarArrays(escolas, utilizadores, transacoes);
     carregarTodosDados(escolas, utilizadores, transacoes);
 
-    int numEscolasRegistadas = obterNumeroEscolasRegistadas(escolas);
-    int numUtilizadoresRegistados = obterNumeroUtilizadoresRegistados(utilizadores);
-    int numTransacoesRegistadas = obterNumeroTransacoesRegistadas(transacoes);
 
     int opcaoMenu = 0;
     
     do {
-        opcaoMenu = menu_opcoes();
+        int numEscolasRegistadas = obterNumeroEscolasRegistadas(escolas);
+        int numUtilizadoresRegistados = obterNumeroUtilizadoresRegistados(utilizadores);
+        int numTransacoesRegistadas = obterNumeroTransacoesRegistadas(transacoes);
 
+        opcaoMenu = menu_opcoes();
+        fflush(stdin);
         switch (opcaoMenu) {
             case OPCAO_MENU_ESCOLAS_REGISTAR:
                 escolas[numEscolasRegistadas] = registarEscola(numEscolasRegistadas);
-                numEscolasRegistadas++;
                 break;
 
             case OPCAO_MENU_ESCOLAS_CONSULTAR:
@@ -258,14 +258,13 @@ Escola registarEscola(int proximoId)
     escola.id = proximoId + 1;
     printf("* Registo de nova escola\n");
     printf("* Nome: ");
-    scanf("%s", &escola.nome);
+    fgets(escola.nome, 100, stdin);
     printf("* Abreviacao: ");
-    scanf("%s", &escola.abreviacao);
+    fgets(escola.abreviacao, 10, stdin);
     printf("* Localidade: ");
-    scanf("%s", &escola.localidade);
+    fgets(escola.localidade, 20, stdin);
     printf("* Campus: ");
     scanf("%d", &escola.campus);
-    
     system("cls");
     return escola;
 }
@@ -319,12 +318,12 @@ Utilizador registarUtilizador(int proximoId, Escola escolas[]) {
     printf("* Id Escola: "); 
     scanf("%d", &utilizador.idEscola);
     printf("* Nome: ");
-    scanf("%s", &utilizador.nome);
+    fgets(utilizador.nome, 100, stdin);
     mostrarTiposUtilizador();   
     printf("* Utilizador: ");
     scanf("%d", &utilizador.tipoUtilizador);
     printf("* Email: ");
-    scanf("%s", &utilizador.email);
+    fgets(utilizador.email, 100, stdin);
 
     while(utilizador.nif < 100000000) {
         printf("* NIF: ");
@@ -637,6 +636,7 @@ void carregarTodosDados(Escola escolas[], Utilizador utilizadores[], Transacao t
 // Função para guardar todos os dados
 // Escolas - Utilizadores - Transações
 void guardarTodosDados(Escola escolas[], Utilizador utilizadores[], Transacao transacoes[]) {
+    system("cls");
     // Escolas
     gravarFicheiro(escolas, sizeof(Escola), NUM_MAX_ESCOLAS, PATH_ESCOLAS);
     gravarFicheiro(utilizadores, sizeof(Utilizador), NUM_MAX_UTILIZADORES, PATH_UTILIZADORES);
