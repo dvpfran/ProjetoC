@@ -76,6 +76,8 @@ void carregarTodosDados();
 void guardarTodosDados();
 void inicializarArrays();
 
+void lerString(char *valor, int tamanho);
+
 char* buscarDataAtual();
 char* buscarHoraAtual();
 
@@ -86,6 +88,7 @@ void carregarEscolas();
 int obterNumeroEscolasRegistadas(Escola escolas[]);
 void mostrarEscolas(Escola escolas[]);
 void realizarRegistoEscola(int numEscolasRegistadas, Escola escolas[]);
+Escola buscarEscola(int idEscola, Escola escolas[]);
 
 // Todas as funções relacionadas com utilizadores.
 void inicializarArrayUtilizadores();
@@ -115,7 +118,7 @@ int selecionarTipoTransacao();
 char * buscarTipoTransacao(int tipoTransacao);
 float pedirValorTransacao(int tipoTransacao);
 
-void ConsultarTotalFaturaEscola(); // apresentado no menu principal
+void mostrarTotalFaturadoPorEscola(Escola escolas[], Transacao transacoes[], Utilizador utilizadores[], int numTransacoes); // apresentado no menu principal
 void PercentagemTransacoes();      // pagamentos por escola
 void TotalTransacao();             // pagamentos entre duas datas por tipo de utilizador
 
@@ -138,6 +141,8 @@ void main()
         int numUtilizadoresRegistados = obterNumeroUtilizadoresRegistados(utilizadores);
         int numTransacoesRegistadas = obterNumeroTransacoesRegistadas(transacoes);
 
+        mostrarTotalFaturadoPorEscola(escolas, transacoes, utilizadores, numTransacoesRegistadas);
+        fflush(stdin);
         opcaoMenu = menu_opcoes();
         switch (opcaoMenu) {
             case OPCAO_MENU_ESCOLAS_REGISTAR:
@@ -175,6 +180,12 @@ void main()
     } while (opcaoMenu != OPCAO_MENU_SAIR);
 
     guardarTodosDados(escolas, utilizadores, transacoes);
+}
+
+void lerString(char *valor, int tamanho) {
+    fflush(stdin);
+    fgets(valor, tamanho, stdin);
+    valor[strcspn(valor, "\n")] = 0;
 }
 
 // Vai inicializar o array das escolas e garantir que todos os id's comecem a 0.
@@ -254,16 +265,15 @@ void menu_transacoes() {
 Escola registarEscola(int proximoId)
 {
     system("cls");
-    fflush(stdin);
     Escola escola;
     escola.id = proximoId + 1;
     printf("* Registo de nova escola\n");
     printf("* Nome: ");
-    fgets(escola.nome, 100, stdin);
+    lerString(escola.nome, 100);
     printf("* Abreviacao: ");
-    fgets(escola.abreviacao, 10, stdin);
+    lerString(escola.abreviacao, 10)    ;
     printf("* Localidade: ");
-    fgets(escola.localidade, 20, stdin);
+    lerString(escola.localidade, 20);
     printf("* Campus: ");
     scanf("%d", &escola.campus);
     system("cls");
@@ -320,8 +330,15 @@ int obterNumeroEscolasRegistadas(Escola escolas[]) {
     return contador;
 }
 
+Escola buscarEscola(int idEscola, Escola escolas[]) {
+    for(int index = 0; index < NUM_MAX_ESCOLAS; index++) {
+        if (escolas[index].id == idEscola) {
+            return escolas[index];
+        }
+    }
+}
+
 Utilizador registarUtilizador(int proximoId, Escola escolas[]) {
-    fflush(stdin);
     Utilizador utilizador;
     utilizador.id = proximoId + 1;
     printf("****** Registo de Novo Utilizador:\n");
@@ -329,12 +346,12 @@ Utilizador registarUtilizador(int proximoId, Escola escolas[]) {
     printf("* Id Escola: "); 
     scanf("%d", &utilizador.idEscola);
     printf("* Nome: ");
-    fgets(utilizador.nome, 100, stdin);
+    lerString(utilizador.nome, 100);
     mostrarTiposUtilizador();   
     printf("* Utilizador: ");
     scanf("%d", &utilizador.tipoUtilizador);
     printf("* Email: ");
-    fgets(utilizador.email, 100, stdin);
+    lerString(utilizador.email, 100);
 
     while(utilizador.nif < 100000000) {
         printf("* NIF: ");
@@ -343,7 +360,6 @@ Utilizador registarUtilizador(int proximoId, Escola escolas[]) {
             printf("* Por favor, introduza um nif valido.\n");
         }
     }
-
     utilizador.saldo = 0;
     system("cls");
     return utilizador;
@@ -449,6 +465,7 @@ void carregarUtilizadores(Utilizador utilizadores[]) {
 }
 
 int selecionarIdUtilizador(Utilizador utilizadores[]) {
+    fflush(stdin);
     system("cls");
     int utilizador = 0;
     for (int index = 0; index < NUM_MAX_UTILIZADORES; index++) {
@@ -571,6 +588,7 @@ void consultarTransacoes(Transacao transacoes[], Utilizador utilizadores[]) {
 }
 
 int selecionarTipoTransacao() {
+    fflush(stdin);
     int tipoTransacao = 0;
     printf("* Tipo de transacao: \n");
     printf("** [%d] - Pagamento\n", TIPO_TRANSACAO_PAGAMENTO);
@@ -581,6 +599,7 @@ int selecionarTipoTransacao() {
 }
 
 float pedirValorTransacao(int tipoTransacao) {
+    fflush(stdin);
     float valor = 0;
     
     if (tipoTransacao == TIPO_TRANSACAO_PAGAMENTO) {
@@ -650,6 +669,28 @@ char* buscarHoraAtual() {
     sprintf(charHora, "%d:%d:%d", hora, minuto, segundo);
 
     return charHora;
+}
+
+void mostrarTotalFaturadoPorEscola(Escola escolas[], Transacao transacoes[], Utilizador utilizadores[], int numTransacoes) {
+    for (int indexEscola = 0; indexEscola < NUM_MAX_ESCOLAS; indexEscola++) {
+        float totalFaturado = 0;
+        if (escolas[indexEscola].id > 0) {
+            if (indexEscola == 0) {
+                printf("********************************************************************************\n");
+                printf("** Total faturado por escola: \n");
+            }
+            for (int indexUtilizador = 0; indexUtilizador < NUM_MAX_UTILIZADORES; indexUtilizador++) {
+                if (escolas[indexEscola].id == utilizadores[indexUtilizador].idEscola) {
+                    for (int indexTransacao = 0; indexTransacao < numTransacoes; indexTransacao++) {
+                        if (transacoes[indexTransacao].tipoTransacao == TIPO_TRANSACAO_PAGAMENTO && transacoes[indexTransacao].idUtilizador == utilizadores[indexUtilizador].id) {
+                            totalFaturado += transacoes[indexTransacao].valorTransacao;
+                        }            
+                    }
+                }
+            }
+        }
+        printf("** [Escola]: %s - [Faturado]: %.2f\n", escolas[indexEscola].nome, totalFaturado);
+    }
 }
 
 // Função para carregar todos os dados quando o programa é aberto
