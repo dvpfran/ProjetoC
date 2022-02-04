@@ -95,6 +95,7 @@ int selecionarIdUtilizador(Utilizador utilizadores[]);
 void atualizarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador, int tipoTransacao, float valor);
 float buscarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador);
 Utilizador buscarUtilizador(int idUtilizador, Utilizador utilizadores[]);
+void realizarRegistoUtilizador(int numUtilizadoresRegistados, int numEscolasRegistadas, Escola escolas[], Utilizador utilizadores[]);
 
 // Todas as funções relacionadas com transações.
 void inicializarArrayTransacoes();
@@ -143,7 +144,7 @@ void main()
                 break;
 
             case OPCAO_MENU_UTILIZADORES_REGISTAR:
-                utilizadores[numUtilizadoresRegistados] = registarUtilizador(numUtilizadoresRegistados, escolas);
+                realizarRegistoUtilizador(numUtilizadoresRegistados, numEscolasRegistadas, escolas, utilizadores);
                 break;
 
             case OPCAO_MENU_UTILIZADORES_CONSULTAR:
@@ -151,7 +152,6 @@ void main()
                 break;
 
             case OPCAO_MENU_TRANSACOES_REGISTAR:
-                printf("* A abrir menu: registar transacoes\n");
                 realizarTransacao(utilizadores, transacoes, numTransacoesRegistadas);
                 break;
 
@@ -266,9 +266,11 @@ void carregarEscolas(Escola escolas[]) {
 void mostrarEscolas(Escola escolas[])
 {
     system("cls");
+    int existeEscolas = 0;
     for (int index = 0; index < NUM_MAX_ESCOLAS; index++)
     {
         if (escolas[index].id > 0) {
+            existeEscolas = 1;
             printf("********************************************************************************\n");
             printf("* Id: %d\n", escolas[index].id);
             printf("* Abreviacao: %s\n", escolas[index].abreviacao);
@@ -276,10 +278,14 @@ void mostrarEscolas(Escola escolas[])
             printf("* Campus: %d\n", escolas[index].campus);
             printf("* Localidade: %s\n", escolas[index].localidade);
         }
-
         if (index + 1 == NUM_MAX_ESCOLAS)
         {
-            printf("********************************************************************************\n");
+            if (existeEscolas == 0) {
+                printf("* Nao existe qualquer registo de escolas.\n");
+            }
+            else {
+                printf("********************************************************************************\n");
+            }
         }
     }
 }
@@ -302,24 +308,28 @@ Utilizador registarUtilizador(int proximoId, Escola escolas[]) {
     mostrarEscolasUtilizador(escolas);
     printf("* Id Escola: "); 
     scanf("%d", &utilizador.idEscola);
-   
     printf("* Nome: ");
     scanf("%s", &utilizador.nome);
     mostrarTiposUtilizador();   
-
     printf("* Utilizador: ");
     scanf("%d", &utilizador.tipoUtilizador);
     printf("* Email: ");
     scanf("%s", &utilizador.email);
-    
     printf("* NIF: ");
     scanf("%d", &utilizador.nif);
 
     utilizador.saldo = 0;
-    
     system("cls");
-
     return utilizador;
+}
+
+void realizarRegistoUtilizador(int numUtilizadoresRegistados, int numEscolasRegistadas, Escola escolas[], Utilizador utilizadores[]) {
+    if (numEscolasRegistadas > 0) {
+        utilizadores[numUtilizadoresRegistados] = registarUtilizador(numUtilizadoresRegistados, escolas);
+    }
+    else {
+        printf("* Nao e possivel registar um utilizador sem haver pelo menos uma escola registada\n");
+    }
 }
 
 void mostrarEscolasUtilizador(Escola escolas[]) {
@@ -333,8 +343,10 @@ void mostrarEscolasUtilizador(Escola escolas[]) {
 
 void mostrarUtilizadores(Utilizador utilizadores[]) {
     system("cls");
+    int existeUtilizadores = 0;
     for (int index = 0; index < NUM_MAX_UTILIZADORES; index++) {
         if (utilizadores[index].id > 0) {
+            existeUtilizadores = 1;
             printf("********************************************************************************\n");
             printf("* Id: %d\n", utilizadores[index].id);
             printf("* Id Escola: %d\n", utilizadores[index].idEscola);
@@ -344,10 +356,14 @@ void mostrarUtilizadores(Utilizador utilizadores[]) {
             printf("* Nome: %s\n", utilizadores[index].nome);
             printf("* Saldo: %.2f\n", utilizadores[index].saldo);
         }
-
         if (index + 1 == NUM_MAX_UTILIZADORES)
         {
-            printf("********************************************************************************\n");
+            if (existeUtilizadores == 0) {
+                printf("* Nao existe qualquer registo de utilizadores.\n");
+            }
+            else {
+                printf("********************************************************************************\n");
+            }
         }
     }
 }
@@ -476,14 +492,22 @@ void atualizarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador, int t
 }
 
 void consultarTransacoes(Transacao transacoes[], Utilizador utilizadores[]) {
+    system("cls");
+    int existeTransacoes = 0;
     for (int index = 0; index < NUM_MAX_TRANSACOES; index++) {
         if (transacoes[index].id > 0) {
+            existeTransacoes = 1;
             printf("* Transacao: %d - Utilizador: %s - Tipo Transacao: %s - Valor: %.2f - Data: %s", 
                 transacoes[index].id, 
                 buscarUtilizador(transacoes[index].idUtilizador, utilizadores).nome, 
                 buscarTipoTransacao(transacoes[index].tipoTransacao), 
                 transacoes[index].valorTransacao, 
                 transacoes[index].dataHora);
+        }
+        if (index + 1 == NUM_MAX_TRANSACOES) {
+            if (existeTransacoes == 0) {
+                printf("* Nao existe qualquer registo de transacoes.\n");
+            }
         }
     }
 }
