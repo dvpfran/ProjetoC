@@ -85,6 +85,7 @@ Escola registarEscola(int proximoId);
 void carregarEscolas();
 int obterNumeroEscolasRegistadas(Escola escolas[]);
 void mostrarEscolas(Escola escolas[]);
+void realizarRegistoEscola(int numEscolasRegistadas, Escola escolas[]);
 
 // Todas as funções relacionadas com utilizadores.
 void inicializarArrayUtilizadores();
@@ -129,7 +130,6 @@ void main()
     inicializarArrays(escolas, utilizadores, transacoes);
     carregarTodosDados(escolas, utilizadores, transacoes);
 
-
     int opcaoMenu = 0;
     
     do {
@@ -138,10 +138,9 @@ void main()
         int numTransacoesRegistadas = obterNumeroTransacoesRegistadas(transacoes);
 
         opcaoMenu = menu_opcoes();
-        fflush(stdin);
         switch (opcaoMenu) {
             case OPCAO_MENU_ESCOLAS_REGISTAR:
-                escolas[numEscolasRegistadas] = registarEscola(numEscolasRegistadas);
+                realizarRegistoEscola(numEscolasRegistadas, escolas);
                 break;
 
             case OPCAO_MENU_ESCOLAS_CONSULTAR:
@@ -254,6 +253,7 @@ void menu_transacoes() {
 Escola registarEscola(int proximoId)
 {
     system("cls");
+    fflush(stdin);
     Escola escola;
     escola.id = proximoId + 1;
     printf("* Registo de nova escola\n");
@@ -267,6 +267,15 @@ Escola registarEscola(int proximoId)
     scanf("%d", &escola.campus);
     system("cls");
     return escola;
+}
+
+void realizarRegistoEscola(int numEscolasRegistadas, Escola escolas[]) {
+    if (numEscolasRegistadas < NUM_MAX_ESCOLAS) {
+        escolas[numEscolasRegistadas] = registarEscola(numEscolasRegistadas);
+    }
+    else {
+        printf("* Nao e possivel registar mais escolas pois ja antigiu o limite: %d.\n", NUM_MAX_ESCOLAS);
+    }
 }
 
 void carregarEscolas(Escola escolas[]) {
@@ -311,6 +320,7 @@ int obterNumeroEscolasRegistadas(Escola escolas[]) {
 }
 
 Utilizador registarUtilizador(int proximoId, Escola escolas[]) {
+    fflush(stdin);
     Utilizador utilizador;
     utilizador.id = proximoId + 1;
     printf("****** Registo de Novo Utilizador:\n");
@@ -340,11 +350,16 @@ Utilizador registarUtilizador(int proximoId, Escola escolas[]) {
 
 void realizarRegistoUtilizador(int numUtilizadoresRegistados, int numEscolasRegistadas, Escola escolas[], Utilizador utilizadores[]) {
     system("cls");
-    if (numEscolasRegistadas > 0) {
-        utilizadores[numUtilizadoresRegistados] = registarUtilizador(numUtilizadoresRegistados, escolas);
+    if (numUtilizadoresRegistados < NUM_MAX_UTILIZADORES) {
+        if (numEscolasRegistadas > 0) {
+            utilizadores[numUtilizadoresRegistados] = registarUtilizador(numUtilizadoresRegistados, escolas);
+        }
+        else {
+            printf("* Nao e possivel registar um utilizador sem haver pelo menos uma escola registada\n");
+        }
     }
     else {
-        printf("* Nao e possivel registar um utilizador sem haver pelo menos uma escola registada\n");
+        printf("* Nao e possivel registar mais utilizadores pois ja antigiu o limite: %d.\n", NUM_MAX_UTILIZADORES);
     }
 }
 
@@ -465,28 +480,34 @@ int existeAlgumUtilizador(Utilizador utilizador[]) {
 }
 
 void realizarTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas) {
-    system("cls");
-    if (existeAlgumUtilizador(utilizadores) == 1 ) {
-        int idUtilizador = selecionarIdUtilizador(utilizadores);
-        int tipoTransacao = selecionarTipoTransacao();
-        float valorTransacao = pedirValorTransacao(tipoTransacao);
-        int dinheiroSuficiente = 1;
-        float saldoUtilizador = 0;
-        if (tipoTransacao == TIPO_TRANSACAO_PAGAMENTO) {
-            saldoUtilizador = buscarSaldoUtilizador(utilizadores, idUtilizador);
-            dinheiroSuficiente = saldoUtilizador > valorTransacao;
-        }
-        if (dinheiroSuficiente == 1) {
-            atualizarSaldoUtilizador(utilizadores, idUtilizador, tipoTransacao, valorTransacao);
-            transacoes[numTransacoesRegistadas] = registarTransacao(numTransacoesRegistadas, idUtilizador, tipoTransacao, valorTransacao);
+    if (numTransacoesRegistadas < NUM_MAX_TRANSACOES) {
+        fflush(stdin);
+        system("cls");
+        if (existeAlgumUtilizador(utilizadores) == 1 ) {
+            int idUtilizador = selecionarIdUtilizador(utilizadores);
+            int tipoTransacao = selecionarTipoTransacao();
+            float valorTransacao = pedirValorTransacao(tipoTransacao);
+            int dinheiroSuficiente = 1;
+            float saldoUtilizador = 0;
+            if (tipoTransacao == TIPO_TRANSACAO_PAGAMENTO) {
+                saldoUtilizador = buscarSaldoUtilizador(utilizadores, idUtilizador);
+                dinheiroSuficiente = saldoUtilizador > valorTransacao;
+            }
+            if (dinheiroSuficiente == 1) {
+                atualizarSaldoUtilizador(utilizadores, idUtilizador, tipoTransacao, valorTransacao);
+                transacoes[numTransacoesRegistadas] = registarTransacao(numTransacoesRegistadas, idUtilizador, tipoTransacao, valorTransacao);
+            }
+            else {
+                printf("* Utilizador com saldo insuficiente para realizar o pagamento.\n");
+                printf("* Saldo utilizador: %.2f\n", saldoUtilizador);
+            }
         }
         else {
-            printf("* Utilizador com saldo insuficiente para realizar o pagamento.\n");
-            printf("* Saldo utilizador: %.2f\n", saldoUtilizador);
+            printf("* Nao e possivel realizar uma transacao sem utilizadores registados.\n");
         }
     }
     else {
-        printf("* Nao e possivel realizar uma transacao sem utilizadores registados.\n");
+        printf("* Nao e possivel realizar mais transacoes pois ja antigiu o limite: %d.\n", NUM_MAX_TRANSACOES);
     }
 }
 
