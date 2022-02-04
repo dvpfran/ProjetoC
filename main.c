@@ -27,7 +27,7 @@
 #define OPCAO_MENU_ESTATISTICAS_PERCENTAGEM_PAGAMENTOS 7
 #define OPCAO_MENU_ESTATISTICAS_TOTAL_TRANSACOES_HORIZONTE_TEMPORAL 8
 
-#define OPCAO_MENU_GUARDAR_DADOS 20
+#define OPCAO_MENU_GUARDAR_DADOS 10
 
 #define PATH_ESCOLAS "dados_escolas.bin"
 #define PATH_UTILIZADORES "dados_utilizadores.bin"
@@ -121,7 +121,8 @@ int getTotalNumeroTransacoesPorTipo(Transacao transacoes[], int tipoTransacao);
 
 void mostrarTotalFaturadoPorEscola(Escola escolas[], Transacao transacoes[], Utilizador utilizadores[], int numTransacoes); // apresentado no menu principal
 void mostrarPercentagemTransacoesPorEscola();      // pagamentos por escola
-void TotalTransacao();             // pagamentos entre duas datas por tipo de utilizador
+void filtrarTotalPagamentos(Transacao transacoes[], Utilizador utilizadores[]);             
+void mostrarTotalPagamentosFiltro(char *dataInicio, char *dataFim, Transacao transacoes[], Utilizador utilizadores[], int tipoUtilizador);             // pagamentos entre duas datas por tipo de utilizador
 
 void gravarFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char caminhoFicheiro[]);
 void lerFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char caminhoFicheiro[]);
@@ -174,6 +175,11 @@ void main()
             case OPCAO_MENU_ESTATISTICAS_PERCENTAGEM_PAGAMENTOS:
                 system("cls");
                 mostrarPercentagemTransacoesPorEscola(escolas, transacoes, utilizadores, numTransacoesRegistadas, numEscolasRegistadas);
+                break;
+
+            case OPCAO_MENU_ESTATISTICAS_TOTAL_TRANSACOES_HORIZONTE_TEMPORAL:
+                system("cls");
+                filtrarTotalPagamentos(transacoes, utilizadores);
                 break;
 
             case OPCAO_MENU_GUARDAR_DADOS:
@@ -272,7 +278,8 @@ void menu_transacoes() {
 
 void menu_estatisticas() {
     printf("******* Estatisticas: ********\n");
-    printf("* [%d] * Consultar percentagem pagamentos por escola   *\n", OPCAO_MENU_ESTATISTICAS_PERCENTAGEM_PAGAMENTOS);
+    printf("* [%d] * Consultar percentagem pagamentos por escola\n", OPCAO_MENU_ESTATISTICAS_PERCENTAGEM_PAGAMENTOS);
+    printf("* [%d] * Consultar total de transacoes entre duas datas e tipo de utilizador\n", OPCAO_MENU_ESTATISTICAS_TOTAL_TRANSACOES_HORIZONTE_TEMPORAL);
 }
 
 Escola registarEscola(int proximoId)
@@ -729,8 +736,38 @@ void mostrarPercentagemTransacoesPorEscola(Escola escolas[], Transacao transacoe
     }
 }
 
-void buscarUtilizadoresEscola() {
+void filtrarTotalPagamentos(Transacao transacoes[], Utilizador utilizadores[]) {
+    char *dataInicio = malloc(100);
+    char *dataFim = malloc(100);
 
+    printf("* Introduzir data de inicio: \n");
+    lerString(dataInicio, 100);
+    
+    printf("* Introduzir data de fim: \n");
+    lerString(dataFim, 100);
+
+    int tipoUtilizador = 0;
+    mostrarTiposUtilizador();
+    printf("* Introduzir tipo utilizador: ");
+    scanf("%d", &tipoUtilizador);
+
+    mostrarTotalPagamentosFiltro(dataInicio, dataFim, transacoes, utilizadores, tipoUtilizador);
+}
+
+void mostrarTotalPagamentosFiltro(char *dataInicio, char *dataFim, Transacao transacoes[], Utilizador utilizadores[], int tipoUtilizador) {
+    int totalTransacoes = 0;
+    for(int indexTransacao = 0; indexTransacao < NUM_MAX_TRANSACOES; indexTransacao++) {
+        if (transacoes[indexTransacao].id > 0) {
+            for (int indexUtilizador = 0; indexUtilizador < NUM_MAX_UTILIZADORES; indexUtilizador++) {
+                if (utilizadores[indexUtilizador].tipoUtilizador == tipoUtilizador && utilizadores[indexUtilizador].id == transacoes[indexTransacao].idUtilizador) {
+                    totalTransacoes++;
+                }
+            }
+        }
+    }
+    if (totalTransacoes > 0) {
+        printf("** Total transacoes entre %s e %s com o tipo de utilizador %s - [%d]\n", dataInicio, dataFim, buscarTipoUtilizador(tipoUtilizador), totalTransacoes);
+    }
 }
 
 int getTotalNumeroTransacoesPorTipo(Transacao transacoes[], int tipoTransacao) {
