@@ -94,15 +94,17 @@ void mostrarTiposUtilizador();
 int selecionarIdUtilizador(Utilizador utilizadores[]);
 void atualizarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador, int tipoTransacao, float valor);
 float buscarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador);
+Utilizador buscarUtilizador(int idUtilizador, Utilizador utilizadores[]);
 
 // Todas as funções relacionadas com transações.
 void inicializarArrayTransacoes();
 Transacao registarTransacao(int numTransacoes, int idUtilizador, int tipoTransacao, float valor);
 void realizarTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas);
 void consultarTransacao(Transacao transacoes[]);
-void consultarTransacoes(Transacao transacoes[]);
+void consultarTransacoes(Transacao transacoes[], Utilizador utilizadores[]);
 int obterNumeroTransacoesRegistadas(Transacao transacoes[]);
 int selecionarTipoTransacao();
+char * buscarTipoTransacao(int tipoTransacao);
 float pedirValorTransacao(int tipoTransacao);
 
 
@@ -154,7 +156,7 @@ void main()
                 break;
 
             case OPCAO_MENU_TRANSACOES_CONSULTAR:
-                consultarTransacoes(transacoes);
+                consultarTransacoes(transacoes, utilizadores);
                 break;
 
             case OPCAO_MENU_SAIR:
@@ -383,6 +385,17 @@ char *buscarTipoUtilizador(int tipoUtilizador) {
     return descricaoTipoUtilizador;
 }
 
+Utilizador buscarUtilizador (int idUtilizador, Utilizador utilizadores[]) {
+    Utilizador utilizador;
+     for (int index = 0; index < NUM_MAX_UTILIZADORES; index++) {
+        if (utilizadores[index].id == idUtilizador) {
+            utilizador = utilizadores[index];
+            index = NUM_MAX_UTILIZADORES;
+        }
+     }
+     return utilizador;
+}
+
 void carregarUtilizadores(Utilizador utilizadores[]) {
     lerFicheiro(utilizadores, sizeof(Utilizador), NUM_MAX_UTILIZADORES, PATH_UTILIZADORES);
 }
@@ -462,8 +475,17 @@ void atualizarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador, int t
     
 }
 
-void consultarTransacoes(Transacao transacoes[]) {
-
+void consultarTransacoes(Transacao transacoes[], Utilizador utilizadores[]) {
+    for (int index = 0; index < NUM_MAX_TRANSACOES; index++) {
+        if (transacoes[index].id > 0) {
+            printf("* Transacao: %d - Utilizador: %s - Tipo Transacao: %s - Valor: %.2f - Data: %s", 
+                transacoes[index].id, 
+                buscarUtilizador(transacoes[index].idUtilizador, utilizadores).nome, 
+                buscarTipoTransacao(transacoes[index].tipoTransacao), 
+                transacoes[index].valorTransacao, 
+                transacoes[index].dataHora);
+        }
+    }
 }
 
 int selecionarTipoTransacao() {
@@ -489,6 +511,20 @@ float pedirValorTransacao(int tipoTransacao) {
 
     scanf("%f", &valor);
     return valor;
+}
+
+char *buscarTipoTransacao(int tipoTransacao) {
+    char *tipo;
+
+    if (tipoTransacao == TIPO_TRANSACAO_PAGAMENTO) {
+        tipo = "Pagamento";
+    }
+
+    if (tipoTransacao == TIPO_TRANSACAO_CARREGAMENTO) {
+        tipo = "Carregamento";
+    }
+
+    return tipo;
 }
 
 int obterNumeroTransacoesRegistadas(Transacao transacoes[]) {
