@@ -28,6 +28,8 @@
 #define OPCAO_MENU_ESTATISTICAS_PERCENTAGEM_PAGAMENTOS 12
 #define OPCAO_MENU_ESTATISTICAS_TOTAL_TRANSACOES_HORIZONTE_TEMPORAL 13
 
+#define OPCAO_MENU_GUARDAR_DADOS 20
+
 #define PATH_ESCOLAS "dados_escolas.bin"
 #define PATH_UTILIZADORES "dados_utilizadores.bin"
 #define PATH_TRANSACOES "dados_transacoes.bin"
@@ -162,6 +164,10 @@ void main()
                 consultarTransacoes(transacoes, utilizadores);
                 break;
 
+            case OPCAO_MENU_GUARDAR_DADOS:
+                guardarTodosDados(escolas, utilizadores, transacoes);
+                break;
+
             case OPCAO_MENU_SAIR:
             default:
                 break;
@@ -219,7 +225,8 @@ int menu_opcoes() {
     menu_utilizadores();
     menu_transacoes();
     printf("*******\n");
-    printf("* [%d] * Sair               *\n", OPCAO_MENU_SAIR);
+    printf("* [%d] * Guardar dados      *\n", OPCAO_MENU_GUARDAR_DADOS);
+    printf("* [%d]  * Sair               *\n", OPCAO_MENU_SAIR);
     printf("* Selecionar menu: ");
     scanf("%d", &menuSelecionado);
     printf("\n********************************************************************************\n");
@@ -585,9 +592,18 @@ void carregarTransacoes(Transacao transacoes[]) {
 }
 
 char* buscarDataAtual() {
-    time_t t;
-    time(&t);
-    return ctime(&t);
+    char* charData;
+    time_t dataAtual = time(NULL);
+    struct tm *tm_struct  = localtime(&dataAtual);
+    
+    int dia = tm_struct->tm_mday;
+    int mes = tm_struct->tm_mon;
+    int ano = tm_struct->tm_year;
+
+    sprintf(charData, "%d-%d-%d", dia, mes + 1, ano);
+
+    return charData;
+
 }
 
 char* buscarHoraAtual() {
@@ -595,9 +611,9 @@ char* buscarHoraAtual() {
 
     time_t horaAtual = time(NULL);
     struct tm *tm_struct  = localtime(&horaAtual);
-    int hora = tm_struct ->tm_hour;
-    int minuto = tm_struct ->tm_min;
-    int segundo = tm_struct ->tm_sec;
+    int hora = tm_struct->tm_hour;
+    int minuto = tm_struct->tm_min;
+    int segundo = tm_struct->tm_sec;
 
     sprintf(charHora, "%d:%d:%d", hora, minuto, segundo);
 
