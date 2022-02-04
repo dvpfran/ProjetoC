@@ -325,8 +325,14 @@ Utilizador registarUtilizador(int proximoId, Escola escolas[]) {
     scanf("%d", &utilizador.tipoUtilizador);
     printf("* Email: ");
     scanf("%s", &utilizador.email);
-    printf("* NIF: ");
-    scanf("%d", &utilizador.nif);
+
+    while(utilizador.nif < 100000000) {
+        printf("* NIF: ");
+        scanf("%d", &utilizador.nif);
+        if (utilizador.nif < 100000000) {
+            printf("* Por favor, introduza um nif valido.\n");
+        }
+    }
 
     utilizador.saldo = 0;
     system("cls");
