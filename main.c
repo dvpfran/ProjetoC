@@ -106,7 +106,8 @@ int existeAlgumUtilizador(Utilizador utilizadores[]);
 // Todas as funções relacionadas com transações.
 void inicializarArrayTransacoes();
 Transacao registarTransacao(int numTransacoes, int idUtilizador, int tipoTransacao, float valor);
-void realizarTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas);
+void iniciarTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas);
+void prepararTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas);
 void consultarTransacao(Transacao transacoes[]);
 void consultarTransacoes(Transacao transacoes[], Utilizador utilizadores[]);
 int obterNumeroTransacoesRegistadas(Transacao transacoes[]);
@@ -156,7 +157,7 @@ void main()
                 break;
 
             case OPCAO_MENU_TRANSACOES_REGISTAR:
-                realizarTransacao(utilizadores, transacoes, numTransacoesRegistadas);
+                iniciarTransacao(utilizadores, transacoes, numTransacoesRegistadas);
                 break;
 
             case OPCAO_MENU_TRANSACOES_CONSULTAR:
@@ -479,28 +480,12 @@ int existeAlgumUtilizador(Utilizador utilizador[]) {
     return existe;
 }
 
-void realizarTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas) {
+void iniciarTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas) {
     if (numTransacoesRegistadas < NUM_MAX_TRANSACOES) {
         fflush(stdin);
         system("cls");
         if (existeAlgumUtilizador(utilizadores) == 1 ) {
-            int idUtilizador = selecionarIdUtilizador(utilizadores);
-            int tipoTransacao = selecionarTipoTransacao();
-            float valorTransacao = pedirValorTransacao(tipoTransacao);
-            int dinheiroSuficiente = 1;
-            float saldoUtilizador = 0;
-            if (tipoTransacao == TIPO_TRANSACAO_PAGAMENTO) {
-                saldoUtilizador = buscarSaldoUtilizador(utilizadores, idUtilizador);
-                dinheiroSuficiente = saldoUtilizador > valorTransacao;
-            }
-            if (dinheiroSuficiente == 1) {
-                atualizarSaldoUtilizador(utilizadores, idUtilizador, tipoTransacao, valorTransacao);
-                transacoes[numTransacoesRegistadas] = registarTransacao(numTransacoesRegistadas, idUtilizador, tipoTransacao, valorTransacao);
-            }
-            else {
-                printf("* Utilizador com saldo insuficiente para realizar o pagamento.\n");
-                printf("* Saldo utilizador: %.2f\n", saldoUtilizador);
-            }
+            prepararTransacao(utilizadores, transacoes, numTransacoesRegistadas);
         }
         else {
             printf("* Nao e possivel realizar uma transacao sem utilizadores registados.\n");
@@ -508,6 +493,27 @@ void realizarTransacao(Utilizador utilizadores[], Transacao transacoes[], int nu
     }
     else {
         printf("* Nao e possivel realizar mais transacoes pois ja antigiu o limite: %d.\n", NUM_MAX_TRANSACOES);
+    }
+}
+
+void prepararTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas) {
+    int idUtilizador = selecionarIdUtilizador(utilizadores);
+    int tipoTransacao = selecionarTipoTransacao();
+    float valorTransacao = pedirValorTransacao(tipoTransacao);
+    int dinheiroSuficiente = 1;
+    float saldoUtilizador = 0;
+
+    if (tipoTransacao == TIPO_TRANSACAO_PAGAMENTO) {
+        saldoUtilizador = buscarSaldoUtilizador(utilizadores, idUtilizador);
+        dinheiroSuficiente = saldoUtilizador >= valorTransacao;
+    }
+    if (dinheiroSuficiente == 1) {
+        atualizarSaldoUtilizador(utilizadores, idUtilizador, tipoTransacao, valorTransacao);
+        transacoes[numTransacoesRegistadas] = registarTransacao(numTransacoesRegistadas, idUtilizador, tipoTransacao, valorTransacao);
+    }
+    else {
+        printf("* Utilizador com saldo insuficiente para realizar o pagamento.\n");
+        printf("* Saldo utilizador: %.2f\n", saldoUtilizador);
     }
 }
 
