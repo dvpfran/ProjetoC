@@ -138,9 +138,12 @@ void lerFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char camin
 // ################# CÓDIGO DA SEGUNDA FASE #################
 
 char *lerFicheiroDeTexto(char caminhoFicheiro[]);
-void importarEscolas(Escola escolas[]);
+void importarEscolas(Escola escolas[], int numEscolasRegistadas);
 void converterCharParaEscolas(char charEscolas[], Escola escolas[]);
 void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas, Escola escolas[], char splitEscolas[]);
+void avisoImportacao(char* tipoImportacao, int limiteImportacao);
+int existAlgumaEscola(int idEscola, Escola escolas[]);
+
 // ################# CÓDIGO DA SEGUNDA FASE #################
 
 void main()
@@ -177,7 +180,8 @@ void main()
 
             // ################# CÓDIGO DA SEGUNDA FASE #################
             case OPCAO_MENU_ESCOLAS_IMPORTAR:
-                importarEscolas(escolas);
+                system("cls");
+                importarEscolas(escolas, numEscolasRegistadas);
                 break;
             // ################# CÓDIGO DA SEGUNDA FASE #################
 
@@ -899,17 +903,39 @@ char *lerFicheiroDeTexto(char caminhoFicheiro[]) {
     return dadosFinais;
 }
 
-void importarEscolas(Escola escolas[]) {
+void avisoImportacao(char *tipoImportacao, int limiteImportacao) {
+    printf("\n********************************************************************************\n");
+    printf("** ATENCAO **\n");
+    printf("** Limite de importacao de %s: %d\n", tipoImportacao, limiteImportacao);
+    printf("** O programa vai ignorar a informacao superior ao limite indicado.\n");
+    printf("** Todos os dados que conterem ids ja existentes na aplicacao tambem serao ignorados");
+    printf("\n********************************************************************************\n");
+}
+
+void importarEscolas(Escola escolas[], int numEscolasRegistadas) {
+    avisoImportacao("escolas", NUM_MAX_ESCOLAS);
     char *dadosEscolas = lerFicheiroDeTexto(PATH_ESCOLAS_TXT);
     Escola escolasImportadas[NUM_MAX_ESCOLAS];
     inicializarArrayEscolas(escolasImportadas);
 
     converterCharParaEscolas(dadosEscolas, escolasImportadas);
-
-    for (int index = 0; index < NUM_MAX_ESCOLAS; index++) {
-        if (escolasImportadas[index].id > 0) {
-            printf("Nome escola importada: %s - Id: %d - Abreviacao: %s\n", escolasImportadas[index].nome, escolasImportadas[index].id, escolasImportadas[index].abreviacao);
+    int numEscolasImportadas = 0;
+    for (int indexEscolasAtuais = 0; indexEscolasAtuais < NUM_MAX_ESCOLAS; indexEscolasAtuais++) {
+        for (int indexEscolasImportadas = 0; indexEscolasImportadas < NUM_MAX_ESCOLAS; indexEscolasImportadas++) {
+            if (escolasImportadas[indexEscolasImportadas].id > 0 && escolas[indexEscolasAtuais].id == 0 && !existAlgumaEscola(escolas[indexEscolasImportadas].id, escolas)) {
+                if (numEscolasRegistadas < NUM_MAX_ESCOLAS) {
+                    numEscolasImportadas++;
+                    escolas[indexEscolasAtuais] = escolasImportadas[indexEscolasImportadas];
+                    printf("Nome escola importada: %s - Id: %d - Abreviacao: %s\n", escolasImportadas[indexEscolasImportadas].nome, escolasImportadas[indexEscolasImportadas].id, escolasImportadas[indexEscolasImportadas].abreviacao);
+                }
+                else {
+                    printf("* Nao e possivel registar mais escolas pois já chegou ao limite: %d\n", NUM_MAX_ESCOLAS);
+                }
+            }
         }
+    }
+    if (escolasImportadas > 0) {
+        printf("* Numero de escolas importadas: %d\n", numEscolasImportadas);
     }
 }
 
@@ -950,6 +976,16 @@ void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas,
             strcpy(escolas[contadorEscolas].localidade, splitEscolas);
             break;
     }
+}
+
+int existAlgumaEscola(int idEscola, Escola escolas[]) {
+    int existe = 0;
+    for (int index = 0; index < NUM_MAX_ESCOLAS; index++) {
+        if (escolas[index].id > 0 && idEscola == escolas[index].id) {
+            existe = 1;
+        }
+    }
+    return existe;
 }
 
 // ################# CÓDIGO DA SEGUNDA FASE #################
