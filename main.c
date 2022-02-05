@@ -33,6 +33,14 @@
 #define PATH_UTILIZADORES "dados_utilizadores.bin"
 #define PATH_TRANSACOES "dados_transacoes.bin"
 
+// ################# CÓDIGO DA SEGUNDA FASE #################
+
+#define PATH_ESCOLAS_TXT "dados_escolas.txt"
+#define OPCAO_MENU_ESCOLAS_IMPORTAR 11
+#define OPCAO_MENU_UTILIZADORES_IMPORTAR 12
+
+// ################# CÓDIGO DA SEGUNDA FASE #################
+
 typedef struct
 {
     int id;
@@ -121,11 +129,19 @@ int getTotalNumeroTransacoesPorTipo(Transacao transacoes[], int tipoTransacao);
 
 void mostrarTotalFaturadoPorEscola(Escola escolas[], Transacao transacoes[], Utilizador utilizadores[], int numTransacoes); // apresentado no menu principal
 void mostrarPercentagemTransacoesPorEscola();      // pagamentos por escola
-void filtrarTotalPagamentos(Transacao transacoes[], Utilizador utilizadores[]);             
+void filtrarTotalPagamentos(Transacao transacoes[], Utilizador utilizadores[]);
 void mostrarTotalPagamentosFiltro(char *dataInicio, char *dataFim, Transacao transacoes[], Utilizador utilizadores[], int tipoUtilizador);             // pagamentos entre duas datas por tipo de utilizador
 
 void gravarFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char caminhoFicheiro[]);
 void lerFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char caminhoFicheiro[]);
+
+// ################# CÓDIGO DA SEGUNDA FASE #################
+
+char *lerFicheiroDeTexto(char caminhoFicheiro[]);
+void importarEscolas(Escola escolas[]);
+void converterCharParaEscolas(char charEscolas[], Escola escolas[]);
+void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas, Escola escolas[], char splitEscolas[]);
+// ################# CÓDIGO DA SEGUNDA FASE #################
 
 void main()
 {
@@ -137,7 +153,7 @@ void main()
     carregarTodosDados(escolas, utilizadores, transacoes);
 
     int opcaoMenu = 0;
-    
+
     do {
         int numEscolasRegistadas = obterNumeroEscolasRegistadas(escolas);
         int numUtilizadoresRegistados = obterNumeroUtilizadoresRegistados(utilizadores);
@@ -158,6 +174,12 @@ void main()
             case OPCAO_MENU_UTILIZADORES_REGISTAR:
                 realizarRegistoUtilizador(numUtilizadoresRegistados, numEscolasRegistadas, escolas, utilizadores);
                 break;
+
+            // ################# CÓDIGO DA SEGUNDA FASE #################
+            case OPCAO_MENU_ESCOLAS_IMPORTAR:
+                importarEscolas(escolas);
+                break;
+            // ################# CÓDIGO DA SEGUNDA FASE #################
 
             case OPCAO_MENU_UTILIZADORES_CONSULTAR:
                 mostrarUtilizadores(utilizadores);
@@ -262,6 +284,9 @@ void menu_escolas() {
     printf("******* Escolas: ********\n");
     printf("* [%d] * Registar Escolas\n", OPCAO_MENU_ESCOLAS_REGISTAR);
     printf("* [%d] * Consultar Escolas\n", OPCAO_MENU_ESCOLAS_CONSULTAR);
+
+    // ################# CÓDIGO DA SEGUNDA FASE #################
+    printf("* [%d] * Importar Escolas\n", OPCAO_MENU_ESCOLAS_IMPORTAR);
 }
 
 void menu_utilizadores() {
@@ -363,11 +388,11 @@ Utilizador registarUtilizador(int proximoId, Escola escolas[]) {
     utilizador.id = proximoId + 1;
     printf("****** Registo de Novo Utilizador:\n");
     mostrarEscolasUtilizador(escolas);
-    printf("* Id Escola: "); 
+    printf("* Id Escola: ");
     scanf("%d", &utilizador.idEscola);
     printf("* Nome: ");
     lerString(utilizador.nome, 100);
-    mostrarTiposUtilizador();   
+    mostrarTiposUtilizador();
     printf("* Utilizador: ");
     scanf("%d", &utilizador.tipoUtilizador);
     printf("* Email: ");
@@ -569,7 +594,7 @@ void atualizarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador, int t
     for(int index = 0; index < NUM_MAX_UTILIZADORES; index++) {
         if (utilizadores[index].id == idUtilizador) {
             float saldoAnteriror = utilizadores[index].saldo;
-            
+
             if (tipoTransacao == TIPO_TRANSACAO_PAGAMENTO) {
                 utilizadores[index].saldo -= valor;
             }
@@ -577,12 +602,12 @@ void atualizarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador, int t
                 utilizadores[index].saldo += valor;
                 printf("* Carregamento realizado com sucesso.\n");
             }
-            
+
             printf("* Saldo anterior: %.2f - Saldo atual: %.2f\n", saldoAnteriror, utilizadores[index].saldo);
             index = NUM_MAX_UTILIZADORES;
         }
     }
-    
+
 }
 
 void consultarTransacoes(Transacao transacoes[], Utilizador utilizadores[]) {
@@ -591,11 +616,11 @@ void consultarTransacoes(Transacao transacoes[], Utilizador utilizadores[]) {
     for (int index = 0; index < NUM_MAX_TRANSACOES; index++) {
         if (transacoes[index].id > 0) {
             existeTransacoes = 1;
-            printf("* Transacao: %d - Utilizador: %s - Tipo Transacao: %s - Valor: %.2f - Data: %s - Hora: %s\n", 
-                transacoes[index].id, 
-                buscarUtilizador(transacoes[index].idUtilizador, utilizadores).nome, 
-                buscarTipoTransacao(transacoes[index].tipoTransacao), 
-                transacoes[index].valorTransacao, 
+            printf("* Transacao: %d - Utilizador: %s - Tipo Transacao: %s - Valor: %.2f - Data: %s - Hora: %s\n",
+                transacoes[index].id,
+                buscarUtilizador(transacoes[index].idUtilizador, utilizadores).nome,
+                buscarTipoTransacao(transacoes[index].tipoTransacao),
+                transacoes[index].valorTransacao,
                 transacoes[index].data,
                 transacoes[index].hora);
         }
@@ -621,7 +646,7 @@ int selecionarTipoTransacao() {
 float pedirValorTransacao(int tipoTransacao) {
     fflush(stdin);
     float valor = 0;
-    
+
     if (tipoTransacao == TIPO_TRANSACAO_PAGAMENTO) {
         printf("* Valor do pagamento: ");
     }
@@ -666,7 +691,7 @@ char* buscarDataAtual() {
     char* charData;
     time_t dataAtual = time(NULL);
     struct tm *tm_struct  = localtime(&dataAtual);
-    
+
     int dia = tm_struct->tm_mday;
     int mes = tm_struct->tm_mon;
     int ano = tm_struct->tm_year;
@@ -704,7 +729,7 @@ void mostrarTotalFaturadoPorEscola(Escola escolas[], Transacao transacoes[], Uti
                     for (int indexTransacao = 0; indexTransacao < numTransacoes; indexTransacao++) {
                         if (transacoes[indexTransacao].tipoTransacao == TIPO_TRANSACAO_PAGAMENTO && transacoes[indexTransacao].idUtilizador == utilizadores[indexUtilizador].id) {
                             totalFaturado += transacoes[indexTransacao].valorTransacao;
-                        }            
+                        }
                     }
                 }
             }
@@ -726,7 +751,7 @@ void mostrarPercentagemTransacoesPorEscola(Escola escolas[], Transacao transacoe
                     for (int indexTransacao = 0; indexTransacao < numTransacoes; indexTransacao++) {
                         if (transacoes[indexTransacao].tipoTransacao == TIPO_TRANSACAO_PAGAMENTO && transacoes[indexTransacao].idUtilizador == utilizadores[indexUtilizador].id) {
                             totalTransacoesEscola++;
-                        }            
+                        }
                     }
                 }
             }
@@ -742,7 +767,7 @@ void filtrarTotalPagamentos(Transacao transacoes[], Utilizador utilizadores[]) {
 
     printf("* Introduzir data de inicio: \n");
     lerString(dataInicio, 100);
-    
+
     printf("* Introduzir data de fim: \n");
     lerString(dataFim, 100);
 
@@ -846,3 +871,85 @@ void gravarFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char ca
     }
     fclose(ficheiro);
 }
+
+// ################# CÓDIGO DA SEGUNDA FASE #################
+
+char *lerFicheiroDeTexto(char caminhoFicheiro[]) {
+    FILE *dadosFicheiro;
+    dadosFicheiro = fopen(caminhoFicheiro, "r");
+    if (dadosFicheiro == NULL)
+    {
+        printf("* O ficheiro indicado nao existe: %s\n", caminhoFicheiro);
+        exit(EXIT_FAILURE);
+    }
+    char *buffer = malloc(1024);
+    char *dadosFinais = malloc(1024);
+    int index = 0;
+    while (fgets(buffer, 1024, dadosFicheiro)) {
+        buffer[strcspn(buffer, "\n")] = '\0';
+        if (index > 0) {
+            strcat(dadosFinais, buffer);
+        }
+        else {
+            strcpy(dadosFinais, buffer);
+        }
+        index++;
+    }
+    fclose(dadosFicheiro);
+    return dadosFinais;
+}
+
+void importarEscolas(Escola escolas[]) {
+    char *dadosEscolas = lerFicheiroDeTexto(PATH_ESCOLAS_TXT);
+    Escola escolasImportadas[NUM_MAX_ESCOLAS];
+    inicializarArrayEscolas(escolasImportadas);
+
+    converterCharParaEscolas(dadosEscolas, escolasImportadas);
+
+    for (int index = 0; index < NUM_MAX_ESCOLAS; index++) {
+        if (escolasImportadas[index].id > 0) {
+            printf("Nome escola importada: %s - Id: %d - Abreviacao: %s\n", escolasImportadas[index].nome, escolasImportadas[index].id, escolasImportadas[index].abreviacao);
+        }
+    }
+}
+
+void converterCharParaEscolas(char charEscolas[], Escola escolas[]) {
+    int contadorEscolas = 0, contadorCamposEscola = 1;
+    char *splitEscolas = strtok(charEscolas, ";");
+
+    while (splitEscolas != NULL) {
+        // Vai atualizar o array escolas conforme o contadorCamposEscola e o contadorEscolas.
+        converterCharParaCampoEscola(contadorCamposEscola, contadorEscolas, escolas, splitEscolas);
+        contadorCamposEscola++;
+
+        // Assim que o contadorCamposEscola ficar maior signfica
+        // que o próximo registo já faz parte de outra escola.
+        if (contadorCamposEscola > NUM_CAMPOS_STRUCT_ESCOLA) {
+            contadorCamposEscola = 1;
+            contadorEscolas++;
+        }
+		splitEscolas = strtok(NULL, ";");
+	}
+}
+
+void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas, Escola escolas[], char splitEscolas[]) {
+     switch (contadorCamposEscola) {
+        case 1:
+            escolas[contadorEscolas].id = (atoi)(splitEscolas);
+            break;
+        case 2:
+            strcpy(escolas[contadorEscolas].nome, splitEscolas);
+            break;
+        case 3:
+            strcpy(escolas[contadorEscolas].abreviacao, splitEscolas);
+            break;
+        case 4:
+            escolas[contadorEscolas].campus = atoi(splitEscolas);
+            break;
+        case 5:
+            strcpy(escolas[contadorEscolas].localidade, splitEscolas);
+            break;
+    }
+}
+
+// ################# CÓDIGO DA SEGUNDA FASE #################
