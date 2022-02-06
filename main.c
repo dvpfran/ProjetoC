@@ -38,7 +38,8 @@
 #define PATH_ESCOLAS_TXT "dados_escolas.txt"
 #define OPCAO_MENU_ESCOLAS_IMPORTAR 11
 #define OPCAO_MENU_UTILIZADORES_IMPORTAR 12
-
+#define NUM_CAMPOS_STRUCT_UTILIZADOR 6 // Na verdade sao 7 mas o campo de saldo tem que ser sempre registado na aplicacao para que haja registo de transacoes com a variacao do saldo.
+#define PATH_UTILIZADORES_TXT "dados_utilizadores.txt"
 // ################# CÓDIGO DA SEGUNDA FASE #################
 
 typedef struct
@@ -138,11 +139,19 @@ void lerFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char camin
 // ################# CÓDIGO DA SEGUNDA FASE #################
 
 char *lerFicheiroDeTexto(char caminhoFicheiro[]);
+
 void importarEscolas(Escola escolas[], int numEscolasRegistadas);
 void converterCharParaEscolas(char charEscolas[], Escola escolas[]);
 void converterCharParaCampoEscola(int contadorCamposEscola, int contadorEscolas, Escola escolas[], char splitEscolas[]);
+
 void avisoImportacao(char* tipoImportacao, int limiteImportacao);
 int existAlgumaEscola(int idEscola, Escola escolas[]);
+
+void importarUtilizadores(Utilizador utilizadores[], int numUtilizadoresRegistados, Escola escolas[]);
+void converterCharParaUtilizadores(char charUtilizadores[], Utilizador utilizadores[]);
+void converterCharParaCampoUtilizador(int contadorCamposUtilizador, int contadorUtilizadores, Utilizador utilizadores[], char splitUtilizadores[]);
+
+int existeAlgumUtilizadorPeloId(int idUtilizador, Utilizador utilizadores[]);
 
 // ################# CÓDIGO DA SEGUNDA FASE #################
 
@@ -174,10 +183,6 @@ void main()
                 mostrarEscolas(escolas);
                 break;
 
-            case OPCAO_MENU_UTILIZADORES_REGISTAR:
-                realizarRegistoUtilizador(numUtilizadoresRegistados, numEscolasRegistadas, escolas, utilizadores);
-                break;
-
             // ################# CÓDIGO DA SEGUNDA FASE #################
             case OPCAO_MENU_ESCOLAS_IMPORTAR:
                 system("cls");
@@ -185,9 +190,20 @@ void main()
                 break;
             // ################# CÓDIGO DA SEGUNDA FASE #################
 
+            case OPCAO_MENU_UTILIZADORES_REGISTAR:
+                realizarRegistoUtilizador(numUtilizadoresRegistados, numEscolasRegistadas, escolas, utilizadores);
+                break;
+
             case OPCAO_MENU_UTILIZADORES_CONSULTAR:
                 mostrarUtilizadores(utilizadores);
                 break;
+
+            // ################# CÓDIGO DA SEGUNDA FASE #################
+            case OPCAO_MENU_UTILIZADORES_IMPORTAR:
+                system("cls");
+                importarUtilizadores(utilizadores, numUtilizadoresRegistados, escolas);
+                break;
+            // ################# CÓDIGO DA SEGUNDA FASE #################
 
             case OPCAO_MENU_TRANSACOES_REGISTAR:
                 iniciarTransacao(utilizadores, transacoes, numTransacoesRegistadas);
@@ -297,6 +313,9 @@ void menu_utilizadores() {
     printf("******* Utilizadores: ********\n");
     printf("* [%d] * Registar Utilizador\n", OPCAO_MENU_UTILIZADORES_REGISTAR);
     printf("* [%d] * Consultar Utilizador\n", OPCAO_MENU_UTILIZADORES_CONSULTAR);
+
+    // ################# CÓDIGO DA SEGUNDA FASE #################
+    printf("* [%d] * Importar Utilizadores\n", OPCAO_MENU_UTILIZADORES_IMPORTAR);
 }
 
 void menu_transacoes() {
@@ -908,8 +927,11 @@ void avisoImportacao(char *tipoImportacao, int limiteImportacao) {
     printf("** ATENCAO **\n");
     printf("** Limite de importacao de %s: %d\n", tipoImportacao, limiteImportacao);
     printf("** O programa vai ignorar a informacao superior ao limite indicado.\n");
-    printf("** Todos os dados que conterem ids ja existentes na aplicacao tambem serao ignorados");
-    printf("\n********************************************************************************\n");
+    printf("** Todos os dados que conterem ids ja existentes na aplicacao tambem nao serao importados.\n");
+    if (tipoImportacao == "utilizadores") {
+        printf("** No caso de ser inserido um utilizador com um ID de uma escola inexistente nao sera importado no sistema.\n");
+    }
+    printf("********************************************************************************\n");
 }
 
 void importarEscolas(Escola escolas[], int numEscolasRegistadas) {
@@ -982,6 +1004,81 @@ int existAlgumaEscola(int idEscola, Escola escolas[]) {
     int existe = 0;
     for (int index = 0; index < NUM_MAX_ESCOLAS; index++) {
         if (escolas[index].id > 0 && idEscola == escolas[index].id) {
+            existe = 1;
+        }
+    }
+    return existe;
+}
+
+void importarUtilizadores(Utilizador utilizadores[], int numUtilizadoresRegistados, Escola escolas[]) {
+    avisoImportacao("utilizadores", NUM_MAX_UTILIZADORES);
+    char *dadosUtilizadores = lerFicheiroDeTexto(PATH_UTILIZADORES_TXT);
+    Utilizador utilizadoresImportados[NUM_MAX_UTILIZADORES];
+    inicializarArrayUtilizadores(utilizadoresImportados);
+    converterCharParaUtilizadores(dadosUtilizadores, utilizadoresImportados);
+    int numUtilizadoresImportados = 0;
+    for (int indexUtilizadoresAtuais = 0; indexUtilizadoresAtuais < NUM_MAX_UTILIZADORES; indexUtilizadoresAtuais++) {
+        for (int indexUtilizadoresImportados = 0; indexUtilizadoresImportados < NUM_MAX_UTILIZADORES; indexUtilizadoresImportados++) {
+            if (utilizadoresImportados[indexUtilizadoresImportados].id > 0 && utilizadores[indexUtilizadoresAtuais].id == 0 && existAlgumaEscola(utilizadoresImportados[indexUtilizadoresImportados].idEscola, escolas) && !existeAlgumUtilizadorPeloId(utilizadoresImportados[indexUtilizadoresImportados].id, utilizadores)) {
+                if (numUtilizadoresRegistados < NUM_MAX_UTILIZADORES) {
+                    numUtilizadoresImportados++;
+                    utilizadores[indexUtilizadoresAtuais] = utilizadoresImportados[indexUtilizadoresImportados];
+                    printf("Nome utilizador importado: %s - Id: %d\n", utilizadoresImportados[indexUtilizadoresImportados].nome, utilizadoresImportados[indexUtilizadoresImportados].id);
+                }
+                else {
+                    printf("* Nao e possivel registar mais utilizadores pois já chegou ao limite: %d\n", NUM_MAX_UTILIZADORES);
+                }
+            }
+        }
+    }
+    if (numUtilizadoresImportados > 0) {
+        printf("* Numero de utilizadores importados: %d\n", numUtilizadoresImportados);
+    }
+}
+
+void converterCharParaUtilizadores(char *charUtilizadores, Utilizador utilizadores[]) {
+    int contadorUtilizadores = 0, contadorCamposUtilizador = 1;
+    char *splitUtilizadores = strtok(charUtilizadores, ";");
+
+    while (splitUtilizadores != NULL) {
+        converterCharParaCampoUtilizador(contadorCamposUtilizador, contadorUtilizadores, utilizadores, splitUtilizadores);
+        contadorCamposUtilizador++;
+
+        if (contadorCamposUtilizador > NUM_CAMPOS_STRUCT_UTILIZADOR) {
+            contadorCamposUtilizador = 1;
+            contadorUtilizadores++;
+        }
+		splitUtilizadores = strtok(NULL, ";");
+	}
+}
+
+void converterCharParaCampoUtilizador(int contadorCamposUtilizador, int contadorUtilizadores, Utilizador utilizadores[], char splitUtilizadores[]) {
+    switch (contadorCamposUtilizador) {
+        case 1:
+            utilizadores[contadorUtilizadores].id = (atoi)(splitUtilizadores);
+            break;
+        case 2:
+            utilizadores[contadorUtilizadores].idEscola = (atoi)(splitUtilizadores);
+            break;
+        case 3:
+            strcpy(utilizadores[contadorUtilizadores].nome, splitUtilizadores);
+            break;
+        case 4:
+            utilizadores[contadorUtilizadores].nif = atoi(splitUtilizadores);
+            break;
+        case 5:
+            utilizadores[contadorUtilizadores].tipoUtilizador = atoi(splitUtilizadores);
+            break;
+        case 6:
+            strcpy(utilizadores[contadorUtilizadores].email, splitUtilizadores);
+            break;
+    }
+}
+
+int existeAlgumUtilizadorPeloId(int idUtilizador, Utilizador utilizadores[]) {
+    int existe = 0;
+    for (int index = 0; index < NUM_MAX_UTILIZADORES; index++) {
+        if (utilizadores[index].id > 0 && utilizadores[index].id == idUtilizador) {
             existe = 1;
         }
     }
