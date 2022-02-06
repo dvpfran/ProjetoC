@@ -33,14 +33,26 @@
 #define PATH_UTILIZADORES "dados_utilizadores.bin"
 #define PATH_TRANSACOES "dados_transacoes.bin"
 
-// ################# CÃ“DIGO DA SEGUNDA FASE #################
+// ################# CÓDIGO DA SEGUNDA FASE #################
 
 #define PATH_ESCOLAS_TXT "dados_escolas.txt"
+#define PATH_UTILIZADORES_TXT "dados_utilizadores.txt"
+#define PATH_PRODUTOS_TXT "dados_produtos.txt"
+#define PATH_PRODUTOS "dados_produtos.bin"
+#define PATH_DETALHES_TRANSACAO "dados_transacao_detalhes.bin"
+
+#define NUM_MAX_PRODUTOS 100
+#define NUM_MAX_DETALHES_TRANSACAO 10000
+
 #define OPCAO_MENU_ESCOLAS_IMPORTAR 11
 #define OPCAO_MENU_UTILIZADORES_IMPORTAR 12
+
 #define NUM_CAMPOS_STRUCT_UTILIZADOR 6 // Na verdade sao 7 mas o campo de saldo tem que ser sempre registado na aplicacao para que haja registo de transacoes com a variacao do saldo.
-#define PATH_UTILIZADORES_TXT "dados_utilizadores.txt"
-// ################# CÃ“DIGO DA SEGUNDA FASE #################
+
+#define OPCAO_MENU_PRODUTOS_INTRODUZIR 13
+#define OPCAO_MENU_PRODUTOS_CONSULTAR 14
+#define OPCAO_MENU_PRODUTOS_IMPORTAR 15
+// ################# CÓDIGO DA SEGUNDA FASE #################
 
 typedef struct
 {
@@ -51,7 +63,7 @@ typedef struct
     int campus;
 } Escola;
 
-// Atualizar este valor quando Ã© adicionado ou removido algum campo da struct Escola.
+// Atualizar este valor quando é adicionado ou removido algum campo da struct Escola.
 #define NUM_CAMPOS_STRUCT_ESCOLA 5
 
 typedef struct
@@ -60,7 +72,7 @@ typedef struct
     int idEscola;
     char nome[100];
     int nif;
-    int tipoUtilizador; // Estudante Docente FuncionÃ¡rio
+    int tipoUtilizador; // Estudante Docente Funcionário
     char email[100];
     float saldo;
 } Utilizador;
@@ -90,7 +102,7 @@ void lerString(char *valor, int tamanho);
 char* buscarDataAtual();
 char* buscarHoraAtual();
 
-// Todas as funÃ§Ãµes relacionadas com escolas.
+// Todas as funções relacionadas com escolas.
 void inicializarArrayEscolas();
 Escola registarEscola(int proximoId);
 void carregarEscolas();
@@ -99,7 +111,7 @@ void mostrarEscolas(Escola escolas[]);
 void realizarRegistoEscola(int numEscolasRegistadas, Escola escolas[]);
 Escola buscarEscola(int idEscola, Escola escolas[]);
 
-// Todas as funÃ§Ãµes relacionadas com utilizadores.
+// Todas as funções relacionadas com utilizadores.
 void inicializarArrayUtilizadores();
 Utilizador registarUtilizador();
 Utilizador ConsultarUtilizador();
@@ -115,7 +127,7 @@ Utilizador buscarUtilizador(int idUtilizador, Utilizador utilizadores[]);
 void realizarRegistoUtilizador(int numUtilizadoresRegistados, int numEscolasRegistadas, Escola escolas[], Utilizador utilizadores[]);
 int existeAlgumUtilizador(Utilizador utilizadores[]);
 
-// Todas as funÃ§Ãµes relacionadas com transaÃ§Ãµes.
+// Todas as funções relacionadas com transações.
 void inicializarArrayTransacoes();
 Transacao registarTransacao(int numTransacoes, int idUtilizador, int tipoTransacao, float valor);
 void iniciarTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas);
@@ -136,7 +148,24 @@ void mostrarTotalPagamentosFiltro(char *dataInicio, char *dataFim, Transacao tra
 void gravarFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char caminhoFicheiro[]);
 void lerFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char caminhoFicheiro[]);
 
-// ################# CÃ“DIGO DA SEGUNDA FASE #################
+// ################# CÓDIGO DA SEGUNDA FASE #################
+
+typedef struct
+{
+    int id;
+    int quantidade;
+    float custo;
+    char nome[50];
+} Produto;
+
+typedef struct
+{
+    int id;
+    int idTransacao;
+    int idProduto;
+    int quantidade;
+    float valorTransacao;
+} DetalheTransacao;
 
 char *lerFicheiroDeTexto(char caminhoFicheiro[]);
 
@@ -153,16 +182,37 @@ void converterCharParaCampoUtilizador(int contadorCamposUtilizador, int contador
 
 int existeAlgumUtilizadorPeloId(int idUtilizador, Utilizador utilizadores[]);
 
-// ################# CÃ“DIGO DA SEGUNDA FASE #################
+void introduzirProduto(int proximoId, Produto produtos[]);
+Produto novoProduto();
+void importarProdutos(Produto produtos[]);
+void comprarProduto(Produto produtos[]);
+void registarDetalheTransacao(DetalheTransacao detalhesTransacao[]);
+void inicializarArrayProdutos(Produto produtos[]);
+void inicializarArrayDetalhesTransacao(DetalheTransacao detalhesTransacao[]);
+int obterNumeroProdutosRegistados(Produto produtos[]);
+int obterNumeroDetalhesTransacaoRegistados(DetalheTransacao detalhesTransacao[]);
+
+// Necessário para operações que requerem alguém com permissões. Por exemplo introduzir/importar produtos no sistema.
+int pedirVerificacaoAdmin();
+
+void menu_produtos();
+void mostrarProdutos(Produto produtos[]);
+
+void carregarProdutos(Produto produtos[]);
+void carregarDetalhesTransacao(DetalheTransacao detalhesTransacao[]);
+
+// ################# CÓDIGO DA SEGUNDA FASE #################
 
 void main()
 {
     Escola escolas[NUM_MAX_ESCOLAS];
     Utilizador utilizadores[NUM_MAX_UTILIZADORES];
     Transacao transacoes[NUM_MAX_TRANSACOES];
+    Produto produtos[NUM_MAX_PRODUTOS];
+    DetalheTransacao detalhesTransacao[NUM_MAX_DETALHES_TRANSACAO];
 
-    inicializarArrays(escolas, utilizadores, transacoes);
-    carregarTodosDados(escolas, utilizadores, transacoes);
+    inicializarArrays(escolas, utilizadores, transacoes, produtos, detalhesTransacao);
+    carregarTodosDados(escolas, utilizadores, transacoes, produtos, detalhesTransacao);
 
     int opcaoMenu = 0;
 
@@ -170,6 +220,8 @@ void main()
         int numEscolasRegistadas = obterNumeroEscolasRegistadas(escolas);
         int numUtilizadoresRegistados = obterNumeroUtilizadoresRegistados(utilizadores);
         int numTransacoesRegistadas = obterNumeroTransacoesRegistadas(transacoes);
+        int numProdutosRegistados = obterNumeroProdutosRegistados(produtos);
+        int numDetalhesTransacaoRegistados = obterNumeroDetalhesTransacaoRegistados(detalhesTransacao);
 
         mostrarTotalFaturadoPorEscola(escolas, transacoes, utilizadores, numTransacoesRegistadas);
         fflush(stdin);
@@ -183,12 +235,12 @@ void main()
                 mostrarEscolas(escolas);
                 break;
 
-            // ################# CÃ“DIGO DA SEGUNDA FASE #################
+            // ################# CÓDIGO DA SEGUNDA FASE #################
             case OPCAO_MENU_ESCOLAS_IMPORTAR:
                 system("cls");
                 importarEscolas(escolas, numEscolasRegistadas);
                 break;
-            // ################# CÃ“DIGO DA SEGUNDA FASE #################
+            // ################# CÓDIGO DA SEGUNDA FASE #################
 
             case OPCAO_MENU_UTILIZADORES_REGISTAR:
                 realizarRegistoUtilizador(numUtilizadoresRegistados, numEscolasRegistadas, escolas, utilizadores);
@@ -198,12 +250,12 @@ void main()
                 mostrarUtilizadores(utilizadores);
                 break;
 
-            // ################# CÃ“DIGO DA SEGUNDA FASE #################
+            // ################# CÓDIGO DA SEGUNDA FASE #################
             case OPCAO_MENU_UTILIZADORES_IMPORTAR:
                 system("cls");
                 importarUtilizadores(utilizadores, numUtilizadoresRegistados, escolas);
                 break;
-            // ################# CÃ“DIGO DA SEGUNDA FASE #################
+            // ################# CÓDIGO DA SEGUNDA FASE #################
 
             case OPCAO_MENU_TRANSACOES_REGISTAR:
                 iniciarTransacao(utilizadores, transacoes, numTransacoesRegistadas);
@@ -225,8 +277,24 @@ void main()
                 break;
 
             case OPCAO_MENU_GUARDAR_DADOS:
-                guardarTodosDados(escolas, utilizadores, transacoes);
+                guardarTodosDados(escolas, utilizadores, transacoes, produtos, detalhesTransacao);
                 break;
+
+            // ################# CÓDIGO DA SEGUNDA FASE #################
+            case OPCAO_MENU_PRODUTOS_INTRODUZIR:
+                system("cls");
+                introduzirProduto(numProdutosRegistados, produtos);
+                break;
+
+            case OPCAO_MENU_PRODUTOS_CONSULTAR:
+                mostrarProdutos(produtos);
+                break;
+
+            case OPCAO_MENU_PRODUTOS_IMPORTAR:
+                system("cls");
+                importarProdutos(produtos);
+                break;
+            // ################# CÓDIGO DA SEGUNDA FASE #################
 
             case OPCAO_MENU_SAIR:
             default:
@@ -234,7 +302,7 @@ void main()
         }
     } while (opcaoMenu != OPCAO_MENU_SAIR);
 
-    guardarTodosDados(escolas, utilizadores, transacoes);
+    guardarTodosDados(escolas, utilizadores, transacoes, produtos, detalhesTransacao);
 }
 
 void lerString(char *valor, int tamanho) {
@@ -244,11 +312,13 @@ void lerString(char *valor, int tamanho) {
 }
 
 // Vai inicializar o array das escolas e garantir que todos os id's comecem a 0.
-// Se o id tiver a 0 significa que a posiÃ§Ã£o do array ainda nÃ£o foi preenchida.
-void inicializarArrays(Escola escolas[], Utilizador utilizadores[], Transacao transacoes[]) {
+// Se o id tiver a 0 significa que a posição do array ainda não foi preenchida.
+void inicializarArrays(Escola escolas[], Utilizador utilizadores[], Transacao transacoes[], Produto produtos[], DetalheTransacao detalhesTransacao[]) {
     inicializarArrayEscolas(escolas);
     inicializarArrayUtilizadores(utilizadores);
     inicializarArrayTransacoes(transacoes);
+    inicializarArrayProdutos(produtos);
+    inicializarArrayDetalhesTransacao(detalhesTransacao);
 }
 
 void inicializarArrayEscolas(Escola escolas[]) {
@@ -283,6 +353,25 @@ void inicializarArrayTransacoes(Transacao transacoes[]) {
     }
 }
 
+void inicializarArrayProdutos(Produto produtos[]) {
+    for (int index = 0; index < NUM_MAX_PRODUTOS; index++) {
+        produtos[index].id = 0;
+        produtos[index].custo = 0;
+        produtos[index].quantidade = 0;
+        strcpy(produtos[index].nome, "");
+    }
+}
+
+void inicializarArrayDetalhesTransacao(DetalheTransacao detalhesTransacao[]) {
+    for (int index = 0; index < NUM_MAX_DETALHES_TRANSACAO; index++) {
+        detalhesTransacao[index].id = 0;
+        detalhesTransacao[index].idProduto = 0;
+        detalhesTransacao[index].idTransacao = 0;
+        detalhesTransacao[index].quantidade = 0;
+        detalhesTransacao[index].valorTransacao = 0;
+    }
+}
+
 int menu_opcoes() {
     int menuSelecionado = 0;
 
@@ -291,6 +380,7 @@ int menu_opcoes() {
     menu_utilizadores();
     menu_transacoes();
     menu_estatisticas();
+    menu_produtos();
     printf("*******\n");
     printf("* [%d] * Guardar dados\n", OPCAO_MENU_GUARDAR_DADOS);
     printf("* [%d]  * Sair\n", OPCAO_MENU_SAIR);
@@ -305,7 +395,7 @@ void menu_escolas() {
     printf("* [%d] * Registar Escolas\n", OPCAO_MENU_ESCOLAS_REGISTAR);
     printf("* [%d] * Consultar Escolas\n", OPCAO_MENU_ESCOLAS_CONSULTAR);
 
-    // ################# CÃ“DIGO DA SEGUNDA FASE #################
+    // ################# CÓDIGO DA SEGUNDA FASE #################
     printf("* [%d] * Importar Escolas\n", OPCAO_MENU_ESCOLAS_IMPORTAR);
 }
 
@@ -314,7 +404,7 @@ void menu_utilizadores() {
     printf("* [%d] * Registar Utilizador\n", OPCAO_MENU_UTILIZADORES_REGISTAR);
     printf("* [%d] * Consultar Utilizador\n", OPCAO_MENU_UTILIZADORES_CONSULTAR);
 
-    // ################# CÃ“DIGO DA SEGUNDA FASE #################
+    // ################# CÓDIGO DA SEGUNDA FASE #################
     printf("* [%d] * Importar Utilizadores\n", OPCAO_MENU_UTILIZADORES_IMPORTAR);
 }
 
@@ -328,6 +418,13 @@ void menu_estatisticas() {
     printf("******* Estatisticas: ********\n");
     printf("* [%d] * Consultar percentagem pagamentos por escola\n", OPCAO_MENU_ESTATISTICAS_PERCENTAGEM_PAGAMENTOS);
     printf("* [%d] * Consultar total de transacoes entre duas datas e tipo de utilizador\n", OPCAO_MENU_ESTATISTICAS_TOTAL_TRANSACOES_HORIZONTE_TEMPORAL);
+}
+
+void menu_produtos() {
+    printf("******* Produtos: ********\n");
+    printf("* [%d] * Registar produto\n", OPCAO_MENU_PRODUTOS_INTRODUZIR);
+    printf("* [%d] * Consultar produtos\n", OPCAO_MENU_PRODUTOS_CONSULTAR);
+    printf("* [%d] * Importar produtos\n", OPCAO_MENU_PRODUTOS_IMPORTAR);
 }
 
 Escola registarEscola(int proximoId)
@@ -802,7 +899,7 @@ void filtrarTotalPagamentos(Transacao transacoes[], Utilizador utilizadores[]) {
     mostrarTotalPagamentosFiltro(dataInicio, dataFim, transacoes, utilizadores, tipoUtilizador);
 }
 
-// Filtro nÃ£o estÃ¡ a ser feito
+// Filtro não está a ser feito
 void mostrarTotalPagamentosFiltro(char *dataInicio, char *dataFim, Transacao transacoes[], Utilizador utilizadores[], int tipoUtilizador) {
     int totalTransacoes = 0;
     for(int indexTransacao = 0; indexTransacao < NUM_MAX_TRANSACOES; indexTransacao++) {
@@ -829,22 +926,26 @@ int getTotalNumeroTransacoesPorTipo(Transacao transacoes[], int tipoTransacao) {
     return total;
 }
 
-// FunÃ§Ã£o para carregar todos os dados quando o programa Ã© aberto
-// Escolas - Utilizadores - TransaÃ§Ãµes - Etc
-void carregarTodosDados(Escola escolas[], Utilizador utilizadores[], Transacao transacoes[]) {
+// Função para carregar todos os dados quando o programa é aberto
+// Escolas - Utilizadores - Transações - Etc
+void carregarTodosDados(Escola escolas[], Utilizador utilizadores[], Transacao transacoes[], Produto produtos[], DetalheTransacao detalhesTransacao[]) {
     carregarEscolas(escolas);
     carregarUtilizadores(utilizadores);
     carregarTransacoes(transacoes);
+    carregarProdutos(produtos);
+    carregarDetalhesTransacao(detalhesTransacao);
 }
 
-// FunÃ§Ã£o para guardar todos os dados
-// Escolas - Utilizadores - TransaÃ§Ãµes
-void guardarTodosDados(Escola escolas[], Utilizador utilizadores[], Transacao transacoes[]) {
+// Função para guardar todos os dados
+// Escolas - Utilizadores - Transações
+void guardarTodosDados(Escola escolas[], Utilizador utilizadores[], Transacao transacoes[], Produto produtos[], DetalheTransacao detalhesTransacao[]) {
     system("cls");
     // Escolas
     gravarFicheiro(escolas, sizeof(Escola), NUM_MAX_ESCOLAS, PATH_ESCOLAS);
     gravarFicheiro(utilizadores, sizeof(Utilizador), NUM_MAX_UTILIZADORES, PATH_UTILIZADORES);
     gravarFicheiro(transacoes, sizeof(Transacao), NUM_MAX_TRANSACOES, PATH_TRANSACOES);
+    gravarFicheiro(produtos, sizeof(Produto), NUM_MAX_PRODUTOS, PATH_PRODUTOS);
+    gravarFicheiro(detalhesTransacao, sizeof(DetalheTransacao), NUM_MAX_DETALHES_TRANSACAO, PATH_DETALHES_TRANSACAO);
 }
 
 void lerFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char caminhoFicheiro[])
@@ -895,7 +996,7 @@ void gravarFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char ca
     fclose(ficheiro);
 }
 
-// ################# CÃ“DIGO DA SEGUNDA FASE #################
+// ################# CÓDIGO DA SEGUNDA FASE #################
 
 char *lerFicheiroDeTexto(char caminhoFicheiro[]) {
     FILE *dadosFicheiro;
@@ -951,7 +1052,7 @@ void importarEscolas(Escola escolas[], int numEscolasRegistadas) {
                     printf("Nome escola importada: %s - Id: %d - Abreviacao: %s\n", escolasImportadas[indexEscolasImportadas].nome, escolasImportadas[indexEscolasImportadas].id, escolasImportadas[indexEscolasImportadas].abreviacao);
                 }
                 else {
-                    printf("* Nao e possivel registar mais escolas pois jÃ¡ chegou ao limite: %d\n", NUM_MAX_ESCOLAS);
+                    printf("* Nao e possivel registar mais escolas pois já chegou ao limite: %d\n", NUM_MAX_ESCOLAS);
                 }
             }
         }
@@ -971,7 +1072,7 @@ void converterCharParaEscolas(char charEscolas[], Escola escolas[]) {
         contadorCamposEscola++;
 
         // Assim que o contadorCamposEscola ficar maior signfica
-        // que o prÃ³ximo registo jÃ¡ faz parte de outra escola.
+        // que o próximo registo já faz parte de outra escola.
         if (contadorCamposEscola > NUM_CAMPOS_STRUCT_ESCOLA) {
             contadorCamposEscola = 1;
             contadorEscolas++;
@@ -1026,7 +1127,7 @@ void importarUtilizadores(Utilizador utilizadores[], int numUtilizadoresRegistad
                     printf("Nome utilizador importado: %s - Id: %d\n", utilizadoresImportados[indexUtilizadoresImportados].nome, utilizadoresImportados[indexUtilizadoresImportados].id);
                 }
                 else {
-                    printf("* Nao e possivel registar mais utilizadores pois jÃ¡ chegou ao limite: %d\n", NUM_MAX_UTILIZADORES);
+                    printf("* Nao e possivel registar mais utilizadores pois já chegou ao limite: %d\n", NUM_MAX_UTILIZADORES);
                 }
             }
         }
@@ -1085,4 +1186,101 @@ int existeAlgumUtilizadorPeloId(int idUtilizador, Utilizador utilizadores[]) {
     return existe;
 }
 
-// ################# CÃ“DIGO DA SEGUNDA FASE #################
+int pedirVerificacaoAdmin() {
+    int senha = 1234;
+    int senhaIntroduzida = 0;
+
+    int sair = 0;
+    do {
+        fflush(stdin);
+        printf("** Introduzir senha de administracao: ");
+        scanf("%d", &senhaIntroduzida);
+        if (senhaIntroduzida != senha) {
+            printf("** Senha invalida. Quer cancelar a operacao?\n");
+            printf("** [0] - Nao | [1] - Sim\n");
+            printf("** Opcao: ");
+            scanf("%d", &sair);
+        }
+    } while (senhaIntroduzida != senha && sair != 1);
+
+    return senhaIntroduzida == senha;
+}
+
+void introduzirProduto(int proximoId, Produto produtos[]) {
+    if (pedirVerificacaoAdmin() == 1) {
+        produtos[proximoId] = novoProduto(proximoId + 1);
+    }
+}
+
+Produto novoProduto(int id) {
+    Produto produto;
+    produto.id = id;
+
+    printf("* Nome do produto: ");
+    lerString(produto.nome, 50);
+    printf("* Custo preco: ");
+    scanf("%f", &produto.custo);
+    printf("* Quantidade: ");
+    scanf("%d", &produto.quantidade);
+
+    return produto;
+}
+
+void importarProdutos(Produto produtos[]) {
+    if (pedirVerificacaoAdmin() == 1) {
+
+    }
+}
+
+int obterNumeroProdutosRegistados(Produto produtos[]) {
+    int contador = 0;
+    for (int index = 0; index < NUM_MAX_PRODUTOS; index++) {
+        if (produtos[index].id > 0) {
+            contador++;
+        }
+    }
+    return contador;
+}
+
+int obterNumeroDetalhesTransacaoRegistados(DetalheTransacao detalhesTransacao[]) {
+    int contador = 0;
+    for (int index = 0; index < NUM_MAX_DETALHES_TRANSACAO; index++) {
+        if (detalhesTransacao[index].id > 0) {
+            contador++;
+        }
+    }
+    return contador;
+}
+
+void mostrarProdutos(Produto produtos[]) {
+    system("cls");
+    int existeProduto = 0;
+    for (int index = 0; index < NUM_MAX_PRODUTOS; index++) {
+        if (produtos[index].id > 0) {
+            existeProduto = 1;
+            printf("********************************************************************************\n");
+            printf("* Id: %d\n", produtos[index].id);
+            printf("* Nome: %s\n", produtos[index].nome);
+            printf("* Preco: %2.f\n", produtos[index].custo);
+            printf("* Quantidade: %d\n", produtos[index].quantidade);
+        }
+        if (index + 1 == NUM_MAX_PRODUTOS) {
+            if (existeProduto == 0) {
+                printf("* Nao existe qualquer registo de produtos.\n");
+            }
+            else {
+                printf("********************************************************************************\n");
+            }
+        }
+    }
+}
+
+void carregarProdutos(Produto produtos[]) {
+    lerFicheiro(produtos, sizeof(Produto), NUM_MAX_PRODUTOS, PATH_PRODUTOS);
+}
+
+void carregarDetalhesTransacao(DetalheTransacao detalhesTransacao[]) {
+    lerFicheiro(detalhesTransacao, sizeof(DetalheTransacao), NUM_MAX_DETALHES_TRANSACAO, PATH_DETALHES_TRANSACAO);
+}
+
+// ################# CÓDIGO DA SEGUNDA FASE #################
