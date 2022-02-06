@@ -1,0 +1,4 @@
+1;ipleiria;ipl;1;leiria;
+2;iplisboa;lisb;1;leiria;
+3;coimbra;coi;1;leiria;
+4;porto;pt;1;leiria;
