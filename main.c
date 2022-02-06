@@ -52,6 +52,9 @@
 #define OPCAO_MENU_PRODUTOS_INTRODUZIR 13
 #define OPCAO_MENU_PRODUTOS_CONSULTAR 14
 #define OPCAO_MENU_PRODUTOS_IMPORTAR 15
+
+#define NUM_CAMPOS_STRUCT_PRODUTO 4
+
 // ################# CÓDIGO DA SEGUNDA FASE #################
 
 typedef struct
@@ -153,9 +156,9 @@ void lerFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char camin
 typedef struct
 {
     int id;
+    char nome[50];
     int quantidade;
     float custo;
-    char nome[50];
 } Produto;
 
 typedef struct
@@ -184,7 +187,11 @@ int existeAlgumUtilizadorPeloId(int idUtilizador, Utilizador utilizadores[]);
 
 void introduzirProduto(int proximoId, Produto produtos[]);
 Produto novoProduto();
-void importarProdutos(Produto produtos[]);
+
+void importarProdutos(Produto produtos[], int numProdutosRegistados);
+void converterCharParaProdutos(char charProdutos[], Produto produtos[]);
+void converterCharParaCampoProduto(int contadorCamposProduto, int contadorProdutos, Produto produtos[], char splitProdutos[]);
+
 void comprarProduto(Produto produtos[]);
 void registarDetalheTransacao(DetalheTransacao detalhesTransacao[]);
 void inicializarArrayProdutos(Produto produtos[]);
@@ -200,6 +207,8 @@ void mostrarProdutos(Produto produtos[]);
 
 void carregarProdutos(Produto produtos[]);
 void carregarDetalhesTransacao(DetalheTransacao detalhesTransacao[]);
+
+int existAlgumProduto(int idProduto, Produto produtos[]);
 
 // ################# CÓDIGO DA SEGUNDA FASE #################
 
@@ -292,7 +301,7 @@ void main()
 
             case OPCAO_MENU_PRODUTOS_IMPORTAR:
                 system("cls");
-                importarProdutos(produtos);
+                importarProdutos(produtos, numProdutosRegistados);
                 break;
             // ################# CÓDIGO DA SEGUNDA FASE #################
 
@@ -1045,9 +1054,10 @@ void importarEscolas(Escola escolas[], int numEscolasRegistadas) {
     int numEscolasImportadas = 0;
     for (int indexEscolasAtuais = 0; indexEscolasAtuais < NUM_MAX_ESCOLAS; indexEscolasAtuais++) {
         for (int indexEscolasImportadas = 0; indexEscolasImportadas < NUM_MAX_ESCOLAS; indexEscolasImportadas++) {
-            if (escolasImportadas[indexEscolasImportadas].id > 0 && escolas[indexEscolasAtuais].id == 0 && !existAlgumaEscola(escolas[indexEscolasImportadas].id, escolas)) {
+            if (escolasImportadas[indexEscolasImportadas].id > 0 && escolas[indexEscolasAtuais].id == 0 && !existAlgumaEscola(escolasImportadas[indexEscolasImportadas].id, escolas)) {
                 if (numEscolasRegistadas < NUM_MAX_ESCOLAS) {
                     numEscolasImportadas++;
+                    numEscolasRegistadas++;
                     escolas[indexEscolasAtuais] = escolasImportadas[indexEscolasImportadas];
                     printf("Nome escola importada: %s - Id: %d - Abreviacao: %s\n", escolasImportadas[indexEscolasImportadas].nome, escolasImportadas[indexEscolasImportadas].id, escolasImportadas[indexEscolasImportadas].abreviacao);
                 }
@@ -1226,10 +1236,41 @@ Produto novoProduto(int id) {
     return produto;
 }
 
-void importarProdutos(Produto produtos[]) {
+void importarProdutos(Produto produtos[], int numProdutosRegistados) {
     if (pedirVerificacaoAdmin() == 1) {
+        avisoImportacao("produtos", NUM_MAX_ESCOLAS);
+        char *dadosProdutos = lerFicheiroDeTexto(PATH_PRODUTOS_TXT);
+        Produto produtosImportados[NUM_MAX_PRODUTOS];
+        inicializarArrayProdutos(produtosImportados);
 
+        converterCharParaProdutos(dadosProdutos, produtosImportados);
+        int numProdutosImportados = 0;
+        for (int indexProdutosAtuais = 0; indexProdutosAtuais < NUM_MAX_PRODUTOS; indexProdutosAtuais++) {
+            for (int indexProdutosImportados = 0; indexProdutosImportados < NUM_MAX_PRODUTOS; indexProdutosImportados++) {
+                if (produtosImportados[indexProdutosImportados].id > 0 && produtos[indexProdutosAtuais].id == 0 && !existAlgumProduto(produtosImportados[indexProdutosImportados].id, produtos)) {
+                    if (numProdutosRegistados < NUM_MAX_PRODUTOS) {
+                        numProdutosImportados++;
+                        numProdutosRegistados++;
+                        produtos[indexProdutosAtuais] = produtosImportados[indexProdutosImportados];
+                        printf("Nome produto importado: %s - Id: %d - Custo: %.2f - Quantidade: %d\n", produtosImportados[indexProdutosImportados].nome, produtosImportados[indexProdutosImportados].id, produtosImportados[indexProdutosImportados].custo, produtosImportados[indexProdutosImportados].quantidade);
+                    }
+                    else {
+                        printf("* Nao e possivel registar mais produtos pois já chegou ao limite: %d\n", NUM_MAX_ESCOLAS);
+                    }
+                }
+            }
+        }
     }
+}
+
+int existAlgumProduto(int idProduto, Produto produtos[]) {
+    int existe = 0;
+    for (int index = 0; index < NUM_MAX_PRODUTOS; index++) {
+        if (produtos[index].id > 0 && idProduto == produtos[index].id) {
+            existe = 1;
+        }
+    }
+    return existe;
 }
 
 int obterNumeroProdutosRegistados(Produto produtos[]) {
@@ -1277,6 +1318,39 @@ void mostrarProdutos(Produto produtos[]) {
 
 void carregarProdutos(Produto produtos[]) {
     lerFicheiro(produtos, sizeof(Produto), NUM_MAX_PRODUTOS, PATH_PRODUTOS);
+}
+
+void converterCharParaProdutos(char charProdutos[], Produto produtos[]) {
+    int contadorProdutos = 0, contadorCamposProduto = 1;
+    char *splitProdutos = strtok(charProdutos, ";");
+
+    while (splitProdutos != NULL) {
+        converterCharParaCampoProduto(contadorCamposProduto, contadorProdutos, produtos, splitProdutos);
+        contadorCamposProduto++;
+
+        if (contadorCamposProduto > NUM_CAMPOS_STRUCT_PRODUTO) {
+            contadorCamposProduto = 1;
+            contadorProdutos++;
+        }
+		splitProdutos = strtok(NULL, ";");
+	}
+}
+
+void converterCharParaCampoProduto(int contadorCamposProduto, int contadorProdutos, Produto produtos[], char splitProdutos[]) {
+    switch (contadorCamposProduto) {
+        case 1:
+            produtos[contadorProdutos].id = (atoi)(splitProdutos);
+            break;
+        case 2:
+            strcpy(produtos[contadorProdutos].nome, splitProdutos);
+            break;
+        case 3:
+            produtos[contadorProdutos].custo = atoi(splitProdutos);
+            break;
+        case 4:
+            produtos[contadorProdutos].quantidade = (atoi)(splitProdutos);
+            break;
+    }
 }
 
 void carregarDetalhesTransacao(DetalheTransacao detalhesTransacao[]) {
