@@ -39,10 +39,8 @@
 #define PATH_UTILIZADORES_TXT "dados_utilizadores.txt"
 #define PATH_PRODUTOS_TXT "dados_produtos.txt"
 #define PATH_PRODUTOS "dados_produtos.bin"
-#define PATH_DETALHES_TRANSACAO "dados_transacao_detalhes.bin"
 
 #define NUM_MAX_PRODUTOS 100
-#define NUM_MAX_DETALHES_TRANSACAO 10000
 
 #define OPCAO_MENU_ESCOLAS_IMPORTAR 11
 #define OPCAO_MENU_UTILIZADORES_IMPORTAR 12
@@ -84,6 +82,7 @@ typedef struct
 {
     int id;
     int idUtilizador;
+    int idProduto;
     int tipoTransacao; // Carregamento Pagamento
     float valorTransacao;
     char data[20];
@@ -97,15 +96,6 @@ typedef struct
     float custo;
     int quantidade;
 } Produto;
-
-typedef struct
-{
-    int id;
-    int idTransacao;
-    int idProduto;
-    int quantidade;
-    float valorTransacao;
-} DetalheTransacao;
 
 int menu_opcoes();
 void menu_escolas();
@@ -149,11 +139,11 @@ int existeAlgumUtilizador(Utilizador utilizadores[]);
 
 // Todas as funções relacionadas com transações.
 void inicializarArrayTransacoes();
-Transacao registarTransacao(int numTransacoes, int idUtilizador, int tipoTransacao, float valor);
+Transacao registarTransacao(int numTransacoes, int idUtilizador, int tipoTransacao, float valor, int idProduto);
 void iniciarTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas, Produto produtos[]);
 void prepararTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas, Produto produtos[]);
 void consultarTransacao(Transacao transacoes[]);
-void consultarTransacoes(Transacao transacoes[], Utilizador utilizadores[]);
+void consultarTransacoes(Transacao transacoes[], Utilizador utilizadores[], Produto produtos[]);
 int obterNumeroTransacoesRegistadas(Transacao transacoes[]);
 int selecionarTipoTransacao();
 char * buscarTipoTransacao(int tipoTransacao);
@@ -193,11 +183,8 @@ void converterCharParaProdutos(char charProdutos[], Produto produtos[]);
 void converterCharParaCampoProduto(int contadorCamposProduto, int contadorProdutos, Produto produtos[], char splitProdutos[]);
 
 void comprarProduto(Produto produtos[]);
-void registarDetalheTransacao(DetalheTransacao detalhesTransacao[]);
 void inicializarArrayProdutos(Produto produtos[]);
-void inicializarArrayDetalhesTransacao(DetalheTransacao detalhesTransacao[]);
 int obterNumeroProdutosRegistados(Produto produtos[]);
-int obterNumeroDetalhesTransacaoRegistados(DetalheTransacao detalhesTransacao[]);
 
 // Necessário para operações que requerem alguém com permissões. Por exemplo introduzir/importar produtos no sistema.
 int pedirVerificacaoAdmin();
@@ -206,7 +193,6 @@ void menu_produtos();
 void mostrarProdutos(Produto produtos[]);
 
 void carregarProdutos(Produto produtos[]);
-void carregarDetalhesTransacao(DetalheTransacao detalhesTransacao[]);
 
 int existAlgumProduto(int idProduto, Produto produtos[]);
 
@@ -218,6 +204,7 @@ void transacaoPagamento(Utilizador utilizadores[], Transacao transacoes[], Produ
 
 int produtoValidoParaTransacao(int idProduto, Produto produtos[]);
 void atualizarQuantidadeProduto(int idProduto, Produto produtos[]);
+char *buscarNomeProduto(int idProduto, Produto produtos[]);
 
 // ################# CÓDIGO DA SEGUNDA FASE #################
 
@@ -227,10 +214,9 @@ void main()
     Utilizador utilizadores[NUM_MAX_UTILIZADORES];
     Transacao transacoes[NUM_MAX_TRANSACOES];
     Produto produtos[NUM_MAX_PRODUTOS];
-    DetalheTransacao detalhesTransacao[NUM_MAX_DETALHES_TRANSACAO];
 
-    inicializarArrays(escolas, utilizadores, transacoes, produtos, detalhesTransacao);
-    carregarTodosDados(escolas, utilizadores, transacoes, produtos, detalhesTransacao);
+    inicializarArrays(escolas, utilizadores, transacoes, produtos);
+    carregarTodosDados(escolas, utilizadores, transacoes, produtos);
 
     int opcaoMenu = 0;
 
@@ -239,7 +225,6 @@ void main()
         int numUtilizadoresRegistados = obterNumeroUtilizadoresRegistados(utilizadores);
         int numTransacoesRegistadas = obterNumeroTransacoesRegistadas(transacoes);
         int numProdutosRegistados = obterNumeroProdutosRegistados(produtos);
-        int numDetalhesTransacaoRegistados = obterNumeroDetalhesTransacaoRegistados(detalhesTransacao);
 
         mostrarTotalFaturadoPorEscola(escolas, transacoes, utilizadores, numTransacoesRegistadas);
         fflush(stdin);
@@ -281,7 +266,7 @@ void main()
 
             case OPCAO_MENU_TRANSACOES_CONSULTAR:
                 system("cls");
-                consultarTransacoes(transacoes, utilizadores);
+                consultarTransacoes(transacoes, utilizadores, produtos);
                 break;
 
             case OPCAO_MENU_ESTATISTICAS_PERCENTAGEM_PAGAMENTOS:
@@ -295,7 +280,7 @@ void main()
                 break;
 
             case OPCAO_MENU_GUARDAR_DADOS:
-                guardarTodosDados(escolas, utilizadores, transacoes, produtos, detalhesTransacao);
+                guardarTodosDados(escolas, utilizadores, transacoes, produtos);
                 break;
 
             // ################# CÓDIGO DA SEGUNDA FASE #################
@@ -320,7 +305,7 @@ void main()
         }
     } while (opcaoMenu != OPCAO_MENU_SAIR);
 
-    guardarTodosDados(escolas, utilizadores, transacoes, produtos, detalhesTransacao);
+    guardarTodosDados(escolas, utilizadores, transacoes, produtos);
 }
 
 void lerString(char *valor, int tamanho) {
@@ -331,12 +316,11 @@ void lerString(char *valor, int tamanho) {
 
 // Vai inicializar o array das escolas e garantir que todos os id's comecem a 0.
 // Se o id tiver a 0 significa que a posição do array ainda não foi preenchida.
-void inicializarArrays(Escola escolas[], Utilizador utilizadores[], Transacao transacoes[], Produto produtos[], DetalheTransacao detalhesTransacao[]) {
+void inicializarArrays(Escola escolas[], Utilizador utilizadores[], Transacao transacoes[], Produto produtos[]) {
     inicializarArrayEscolas(escolas);
     inicializarArrayUtilizadores(utilizadores);
     inicializarArrayTransacoes(transacoes);
     inicializarArrayProdutos(produtos);
-    inicializarArrayDetalhesTransacao(detalhesTransacao);
 }
 
 void inicializarArrayEscolas(Escola escolas[]) {
@@ -365,6 +349,7 @@ void inicializarArrayTransacoes(Transacao transacoes[]) {
     for (int index = 0; index < NUM_MAX_TRANSACOES; index++) {
         transacoes[index].id = 0;
         transacoes[index].idUtilizador = 0;
+        transacoes[index].idProduto = 0;
         transacoes[index].valorTransacao = 0;
         strcpy(transacoes[index].data, "");
         strcpy(transacoes[index].hora, "");
@@ -377,16 +362,6 @@ void inicializarArrayProdutos(Produto produtos[]) {
         produtos[index].custo = 0;
         produtos[index].quantidade = 0;
         strcpy(produtos[index].nome, "");
-    }
-}
-
-void inicializarArrayDetalhesTransacao(DetalheTransacao detalhesTransacao[]) {
-    for (int index = 0; index < NUM_MAX_DETALHES_TRANSACAO; index++) {
-        detalhesTransacao[index].id = 0;
-        detalhesTransacao[index].idProduto = 0;
-        detalhesTransacao[index].idTransacao = 0;
-        detalhesTransacao[index].quantidade = 0;
-        detalhesTransacao[index].valorTransacao = 0;
     }
 }
 
@@ -721,7 +696,7 @@ void transacaoPagamento(Utilizador utilizadores[], Transacao transacoes[], Produ
             if (saldoUtilizador >= precoProduto) {
                 atualizarSaldoUtilizador(utilizadores, idUtilizador, TIPO_TRANSACAO_PAGAMENTO, precoProduto);
                 atualizarQuantidadeProduto(idProduto, produtos);
-                transacoes[numTransacoesRegistadas] = registarTransacao(numTransacoesRegistadas, idUtilizador, TIPO_TRANSACAO_PAGAMENTO, precoProduto);
+                transacoes[numTransacoesRegistadas] = registarTransacao(numTransacoesRegistadas, idUtilizador, TIPO_TRANSACAO_PAGAMENTO, precoProduto, idProduto);
             }
             else {
                 printf("* Utilizador com saldo insuficiente para realizar o pagamento.\n");
@@ -736,21 +711,18 @@ void transacaoCarregamento(Utilizador utilizadores[], Transacao transacoes[], in
     int idUtilizador = selecionarIdUtilizador(utilizadores);
     float valorTransacao = pedirValorTransacao(TIPO_TRANSACAO_CARREGAMENTO);
     atualizarSaldoUtilizador(utilizadores, idUtilizador, TIPO_TRANSACAO_CARREGAMENTO, valorTransacao);
-    transacoes[numTransacoesRegistadas] = registarTransacao(numTransacoesRegistadas, idUtilizador, TIPO_TRANSACAO_CARREGAMENTO, valorTransacao);
-    printf("fiiiim");
+    transacoes[numTransacoesRegistadas] = registarTransacao(numTransacoesRegistadas, idUtilizador, TIPO_TRANSACAO_CARREGAMENTO, valorTransacao, 0);
 }
 
-Transacao registarTransacao(int numTransacoes, int idUtilizador, int tipoTransacao, float valor) {
+Transacao registarTransacao(int numTransacoes, int idUtilizador, int tipoTransacao, float valor, int idProduto) {
     Transacao transacao;
     transacao.id = numTransacoes + 1;
     transacao.idUtilizador = idUtilizador;
+    transacao.idProduto = idProduto;
     transacao.tipoTransacao = tipoTransacao;
     transacao.valorTransacao = valor;
-    printf("antes das horas");
     strcpy(transacao.data, buscarDataAtual());
-    printf("depois da data");
     strcpy(transacao.hora, buscarHoraAtual());
-    printf("depois da das horas");
     return transacao;
 }
 
@@ -773,16 +745,17 @@ void atualizarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador, int t
     }
 }
 
-void consultarTransacoes(Transacao transacoes[], Utilizador utilizadores[]) {
+void consultarTransacoes(Transacao transacoes[], Utilizador utilizadores[], Produto produtos[]) {
     system("cls");
     int existeTransacoes = 0;
     for (int index = 0; index < NUM_MAX_TRANSACOES; index++) {
         if (transacoes[index].id > 0) {
             existeTransacoes = 1;
-            printf("* Transacao: %d - Utilizador: %s - Tipo Transacao: %s - Valor: %.2f - Data: %s - Hora: %s\n",
+            printf("* Transacao: %d - Utilizador: %s - Tipo Transacao: %s - %s Valor: %.2f - Data: %s - Hora: %s\n",
                 transacoes[index].id,
                 buscarUtilizador(transacoes[index].idUtilizador, utilizadores).nome,
                 buscarTipoTransacao(transacoes[index].tipoTransacao),
+                buscarNomeProduto(transacoes[index].idProduto, produtos),
                 transacoes[index].valorTransacao,
                 transacoes[index].data,
                 transacoes[index].hora);
@@ -860,11 +833,7 @@ char* buscarDataAtual() {
     int ano = tm_struct->tm_year;
 
     sprintf(charData, "%d-%d-%d", dia, mes + 1, ano);
-
-    printf("%s", charData);
-
     return charData;
-
 }
 
 char* buscarHoraAtual() {
@@ -973,24 +942,22 @@ int getTotalNumeroTransacoesPorTipo(Transacao transacoes[], int tipoTransacao) {
 
 // Função para carregar todos os dados quando o programa é aberto
 // Escolas - Utilizadores - Transações - Etc
-void carregarTodosDados(Escola escolas[], Utilizador utilizadores[], Transacao transacoes[], Produto produtos[], DetalheTransacao detalhesTransacao[]) {
+void carregarTodosDados(Escola escolas[], Utilizador utilizadores[], Transacao transacoes[], Produto produtos[]) {
     carregarEscolas(escolas);
     carregarUtilizadores(utilizadores);
     carregarTransacoes(transacoes);
     carregarProdutos(produtos);
-    carregarDetalhesTransacao(detalhesTransacao);
 }
 
 // Função para guardar todos os dados
 // Escolas - Utilizadores - Transações
-void guardarTodosDados(Escola escolas[], Utilizador utilizadores[], Transacao transacoes[], Produto produtos[], DetalheTransacao detalhesTransacao[]) {
+void guardarTodosDados(Escola escolas[], Utilizador utilizadores[], Transacao transacoes[], Produto produtos[]) {
     system("cls");
     // Escolas
     gravarFicheiro(escolas, sizeof(Escola), NUM_MAX_ESCOLAS, PATH_ESCOLAS);
     gravarFicheiro(utilizadores, sizeof(Utilizador), NUM_MAX_UTILIZADORES, PATH_UTILIZADORES);
     gravarFicheiro(transacoes, sizeof(Transacao), NUM_MAX_TRANSACOES, PATH_TRANSACOES);
     gravarFicheiro(produtos, sizeof(Produto), NUM_MAX_PRODUTOS, PATH_PRODUTOS);
-    gravarFicheiro(detalhesTransacao, sizeof(DetalheTransacao), NUM_MAX_DETALHES_TRANSACAO, PATH_DETALHES_TRANSACAO);
 }
 
 void lerFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char caminhoFicheiro[])
@@ -1319,16 +1286,6 @@ int obterNumeroProdutosRegistados(Produto produtos[]) {
     return contador;
 }
 
-int obterNumeroDetalhesTransacaoRegistados(DetalheTransacao detalhesTransacao[]) {
-    int contador = 0;
-    for (int index = 0; index < NUM_MAX_DETALHES_TRANSACAO; index++) {
-        if (detalhesTransacao[index].id > 0) {
-            contador++;
-        }
-    }
-    return contador;
-}
-
 void mostrarProdutos(Produto produtos[]) {
     system("cls");
     int existeProduto = 0;
@@ -1414,10 +1371,6 @@ void atualizarQuantidadeProduto(int idProduto, Produto produtos[]) {
     }
 }
 
-void carregarDetalhesTransacao(DetalheTransacao detalhesTransacao[]) {
-    lerFicheiro(detalhesTransacao, sizeof(DetalheTransacao), NUM_MAX_DETALHES_TRANSACAO, PATH_DETALHES_TRANSACAO);
-}
-
 int mostrarProdutosProdutosParaPagamento(Produto produtos[]) {
     int existeProduto = 0;
     for (int index = 0; index < NUM_MAX_PRODUTOS; index++) {
@@ -1432,6 +1385,14 @@ int mostrarProdutosProdutosParaPagamento(Produto produtos[]) {
     return existeProduto;
 }
 
-
+char *buscarNomeProduto(int idProduto, Produto produtos[]) {
+    char *nomeProduto = "";
+    for (int index = 0; index < NUM_MAX_PRODUTOS; index++) {
+        if (produtos[index].id == idProduto) {
+            nomeProduto = produtos[index].nome;
+        }
+    }
+    return nomeProduto;
+}
 
 // ################# CÓDIGO DA SEGUNDA FASE #################
