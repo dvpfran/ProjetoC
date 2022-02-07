@@ -90,6 +90,23 @@ typedef struct
     char hora[20];
 } Transacao;
 
+typedef struct
+{
+    int id;
+    char nome[50];
+    float custo;
+    int quantidade;
+} Produto;
+
+typedef struct
+{
+    int id;
+    int idTransacao;
+    int idProduto;
+    int quantidade;
+    float valorTransacao;
+} DetalheTransacao;
+
 int menu_opcoes();
 void menu_escolas();
 void menu_utilizadores();
@@ -133,8 +150,8 @@ int existeAlgumUtilizador(Utilizador utilizadores[]);
 // Todas as funções relacionadas com transações.
 void inicializarArrayTransacoes();
 Transacao registarTransacao(int numTransacoes, int idUtilizador, int tipoTransacao, float valor);
-void iniciarTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas);
-void prepararTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas);
+void iniciarTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas, Produto produtos[]);
+void prepararTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas, Produto produtos[]);
 void consultarTransacao(Transacao transacoes[]);
 void consultarTransacoes(Transacao transacoes[], Utilizador utilizadores[]);
 int obterNumeroTransacoesRegistadas(Transacao transacoes[]);
@@ -150,26 +167,9 @@ void mostrarTotalPagamentosFiltro(char *dataInicio, char *dataFim, Transacao tra
 
 void gravarFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char caminhoFicheiro[]);
 void lerFicheiro(void *buffer, int numCamposStruct, int tamanhoArray, char caminhoFicheiro[]);
+int mostrarProdutosProdutosParaPagamento(Produto produtos[]);
 
 // ################# CÓDIGO DA SEGUNDA FASE #################
-
-typedef struct
-{
-    int id;
-    char nome[50];
-    int quantidade;
-    float custo;
-} Produto;
-
-typedef struct
-{
-    int id;
-    int idTransacao;
-    int idProduto;
-    int quantidade;
-    float valorTransacao;
-} DetalheTransacao;
-
 char *lerFicheiroDeTexto(char caminhoFicheiro[]);
 
 void importarEscolas(Escola escolas[], int numEscolasRegistadas);
@@ -209,6 +209,15 @@ void carregarProdutos(Produto produtos[]);
 void carregarDetalhesTransacao(DetalheTransacao detalhesTransacao[]);
 
 int existAlgumProduto(int idProduto, Produto produtos[]);
+
+float buscarPrecoProduto(int idProduto, Produto produtos[]);
+int mostrarProdutosProdutosParaPagamento(Produto produtos[]);
+
+void transacaoCarregamento(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas);
+void transacaoPagamento(Utilizador utilizadores[], Transacao transacoes[], Produto produtos[], int numTransacoesRegistadas);
+
+int produtoValidoParaTransacao(int idProduto, Produto produtos[]);
+void atualizarQuantidadeProduto(int idProduto, Produto produtos[]);
 
 // ################# CÓDIGO DA SEGUNDA FASE #################
 
@@ -267,7 +276,7 @@ void main()
             // ################# CÓDIGO DA SEGUNDA FASE #################
 
             case OPCAO_MENU_TRANSACOES_REGISTAR:
-                iniciarTransacao(utilizadores, transacoes, numTransacoesRegistadas);
+                iniciarTransacao(utilizadores, transacoes, numTransacoesRegistadas, produtos);
                 break;
 
             case OPCAO_MENU_TRANSACOES_CONSULTAR:
@@ -671,12 +680,12 @@ int existeAlgumUtilizador(Utilizador utilizador[]) {
     return existe;
 }
 
-void iniciarTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas) {
+void iniciarTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas, Produto produtos[]) {
     if (numTransacoesRegistadas < NUM_MAX_TRANSACOES) {
         fflush(stdin);
         system("cls");
         if (existeAlgumUtilizador(utilizadores) == 1 ) {
-            prepararTransacao(utilizadores, transacoes, numTransacoesRegistadas);
+            prepararTransacao(utilizadores, transacoes, numTransacoesRegistadas, produtos);
         }
         else {
             printf("* Nao e possivel realizar uma transacao sem utilizadores registados.\n");
@@ -687,25 +696,48 @@ void iniciarTransacao(Utilizador utilizadores[], Transacao transacoes[], int num
     }
 }
 
-void prepararTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas) {
-    int idUtilizador = selecionarIdUtilizador(utilizadores);
+void prepararTransacao(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas, Produto produtos[]) {
     int tipoTransacao = selecionarTipoTransacao();
-    float valorTransacao = pedirValorTransacao(tipoTransacao);
-    int dinheiroSuficiente = 1;
-    float saldoUtilizador = 0;
 
-    if (tipoTransacao == TIPO_TRANSACAO_PAGAMENTO) {
-        saldoUtilizador = buscarSaldoUtilizador(utilizadores, idUtilizador);
-        dinheiroSuficiente = saldoUtilizador >= valorTransacao;
-    }
-    if (dinheiroSuficiente == 1) {
-        atualizarSaldoUtilizador(utilizadores, idUtilizador, tipoTransacao, valorTransacao);
-        transacoes[numTransacoesRegistadas] = registarTransacao(numTransacoesRegistadas, idUtilizador, tipoTransacao, valorTransacao);
+    if (tipoTransacao == TIPO_TRANSACAO_CARREGAMENTO) {
+        transacaoCarregamento(utilizadores, transacoes, numTransacoesRegistadas);
     }
     else {
-        printf("* Utilizador com saldo insuficiente para realizar o pagamento.\n");
-        printf("* Saldo utilizador: %.2f\n", saldoUtilizador);
+        transacaoPagamento(utilizadores, transacoes, produtos, numTransacoesRegistadas);
     }
+}
+
+void transacaoPagamento(Utilizador utilizadores[], Transacao transacoes[], Produto produtos[], int numTransacoesRegistadas) {
+    int idUtilizador = selecionarIdUtilizador(utilizadores);
+    float saldoUtilizador = buscarSaldoUtilizador(utilizadores, idUtilizador);
+    int existeProdutos = mostrarProdutosProdutosParaPagamento(produtos);
+    if (existeProdutos == 1) {
+        int idProduto;
+        printf("** Selecionar produto: ");
+        scanf("%d", &idProduto);
+
+        if (produtoValidoParaTransacao(idProduto, produtos)) {
+            float precoProduto = buscarPrecoProduto(idProduto, produtos);
+            if (saldoUtilizador >= precoProduto) {
+                atualizarSaldoUtilizador(utilizadores, idUtilizador, TIPO_TRANSACAO_PAGAMENTO, precoProduto);
+                atualizarQuantidadeProduto(idProduto, produtos);
+                transacoes[numTransacoesRegistadas] = registarTransacao(numTransacoesRegistadas, idUtilizador, TIPO_TRANSACAO_PAGAMENTO, precoProduto);
+            }
+            else {
+                printf("* Utilizador com saldo insuficiente para realizar o pagamento.\n");
+                printf("* Saldo utilizador: %.2f\n", saldoUtilizador);
+            }
+        }
+
+    }
+}
+
+void transacaoCarregamento(Utilizador utilizadores[], Transacao transacoes[], int numTransacoesRegistadas) {
+    int idUtilizador = selecionarIdUtilizador(utilizadores);
+    float valorTransacao = pedirValorTransacao(TIPO_TRANSACAO_CARREGAMENTO);
+    atualizarSaldoUtilizador(utilizadores, idUtilizador, TIPO_TRANSACAO_CARREGAMENTO, valorTransacao);
+    transacoes[numTransacoesRegistadas] = registarTransacao(numTransacoesRegistadas, idUtilizador, TIPO_TRANSACAO_CARREGAMENTO, valorTransacao);
+    printf("fiiiim");
 }
 
 Transacao registarTransacao(int numTransacoes, int idUtilizador, int tipoTransacao, float valor) {
@@ -714,8 +746,11 @@ Transacao registarTransacao(int numTransacoes, int idUtilizador, int tipoTransac
     transacao.idUtilizador = idUtilizador;
     transacao.tipoTransacao = tipoTransacao;
     transacao.valorTransacao = valor;
+    printf("antes das horas");
     strcpy(transacao.data, buscarDataAtual());
+    printf("depois da data");
     strcpy(transacao.hora, buscarHoraAtual());
+    printf("depois da das horas");
     return transacao;
 }
 
@@ -736,7 +771,6 @@ void atualizarSaldoUtilizador(Utilizador utilizadores[], int idUtilizador, int t
             index = NUM_MAX_UTILIZADORES;
         }
     }
-
 }
 
 void consultarTransacoes(Transacao transacoes[], Utilizador utilizadores[]) {
@@ -817,7 +851,7 @@ void carregarTransacoes(Transacao transacoes[]) {
 }
 
 char* buscarDataAtual() {
-    char* charData;
+    char* charData = malloc(20);
     time_t dataAtual = time(NULL);
     struct tm *tm_struct  = localtime(&dataAtual);
 
@@ -827,12 +861,14 @@ char* buscarDataAtual() {
 
     sprintf(charData, "%d-%d-%d", dia, mes + 1, ano);
 
+    printf("%s", charData);
+
     return charData;
 
 }
 
 char* buscarHoraAtual() {
-    char* charHora;
+    char* charHora = malloc(20);
 
     time_t horaAtual = time(NULL);
     struct tm *tm_struct  = localtime(&horaAtual);
@@ -1353,8 +1389,49 @@ void converterCharParaCampoProduto(int contadorCamposProduto, int contadorProdut
     }
 }
 
+int produtoValidoParaTransacao(int idProduto, Produto produtos[]) {
+    for (int index = 0; index < NUM_MAX_PRODUTOS; index++) {
+        if (idProduto == produtos[index].id && produtos[index].quantidade > 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+float buscarPrecoProduto(int idProduto, Produto produtos[]) {
+    for (int index = 0; index < NUM_MAX_PRODUTOS; index++) {
+        if (idProduto == produtos[index].id) {
+            return produtos[index].custo;
+        }
+    }
+}
+
+void atualizarQuantidadeProduto(int idProduto, Produto produtos[]) {
+    for (int index = 0; index < NUM_MAX_PRODUTOS; index++) {
+        if (idProduto == produtos[index].id) {
+            produtos[index].quantidade -= 1;
+        }
+    }
+}
+
 void carregarDetalhesTransacao(DetalheTransacao detalhesTransacao[]) {
     lerFicheiro(detalhesTransacao, sizeof(DetalheTransacao), NUM_MAX_DETALHES_TRANSACAO, PATH_DETALHES_TRANSACAO);
 }
+
+int mostrarProdutosProdutosParaPagamento(Produto produtos[]) {
+    int existeProduto = 0;
+    for (int index = 0; index < NUM_MAX_PRODUTOS; index++) {
+        if (produtos[index].id > 0 && produtos[index].quantidade > 0) {
+            existeProduto = 1;
+            printf("**[%d] - %s - Preco: %2.f - Quantidade: %d\n", produtos[index].id, produtos[index].nome, produtos[index].custo, produtos[index].quantidade);
+        }
+    }
+    if (existeProduto == 0) {
+        printf("** Nao existem produtos disponiveis para realizar a transacao\n");
+    }
+    return existeProduto;
+}
+
+
 
 // ################# CÓDIGO DA SEGUNDA FASE #################
